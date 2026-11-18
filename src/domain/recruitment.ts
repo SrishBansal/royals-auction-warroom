@@ -526,7 +526,7 @@ export const RR_BATTER_RECOMMENDATIONS: RecruitmentCandidate[] = [
       },
     },
     upgradeOverSquad:
-      "Adds high-velocity left-handed domestic power without consuming an overseas slot or creating positional friction with Dhruv Jurel.",
+      "Adds high-velocity left-handed domestic power without consuming an overseas slot or creating positional friction with Dhruv Jurel. Evaluated alongside international power candidates like Mitch Owen and Michael Bracewell, but Minz represents domestic wicketkeeper-finisher value without burning an overseas XI slot.",
     watchOut:
       "Zero senior IPL match caps; unproven against international express pace and elite death-overs yorkers.",
     tacticalRolesSupported: ["Wicketkeeper/cover option", "Boundary-hitting finisher"],
@@ -671,9 +671,9 @@ export const RR_BATTER_RECOMMENDATIONS: RecruitmentCandidate[] = [
       },
     },
     upgradeOverSquad:
-      "Elite top-order overseas batting cover, but carries significant role overlap with RR's retained core.",
+      "Elite top-order overseas batting cover, but carries significant role overlap with RR's retained core. Selected ahead of overseas all-rounder candidates like Mitch Owen (PBKS release, ₹3 Cr printed; unverified T20 pressure output) and Michael Bracewell (off-spin all-rounder, unreleased in supplied 89-player register).",
     watchOut:
-      "Positional clash with Vaibhav, Jaiswal, and Parag. He is NOT a natural No.5–8 finisher and must not be recruited for death-hitting roles.",
+      "Positional clash with Vaibhav, Jaiswal, and Parag. He is NOT a natural No.5–8 finisher and must not be recruited for death-hitting roles. Mitch Owen is a lower-order alternative but lacks proven IPL pressure pedigree.",
     tacticalRolesSupported: ["Stabilizer", "Pace-hitting floater"],
     isProvisional: true,
   },

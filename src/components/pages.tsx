@@ -213,7 +213,7 @@ export function HomePage() {
             <div className="mt-12 grid gap-4 lg:grid-cols-[.7fr_1.3fr] lg:items-start">
               <div>
                 <p className="text-[10px] uppercase tracking-[.18em] text-royal-pink">
-                  Open roster · role hypotheses only
+                  Open roster · analytical role requirements
                 </p>
                 <h2 className="display-face mt-2 text-3xl text-foreground">Six empty bays.</h2>
                 <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
@@ -340,14 +340,12 @@ export function HomePage() {
                 </Link>
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
               {[
-                { to: "/targets", n: "01", t: "Auction board" },
-                { to: "/batters", n: "02", t: "Pressure batters" },
-                { to: "/bowlers", n: "03", t: "Pressure bowlers" },
-                { to: "/knockouts", n: "04", t: "Knockout cases" },
-                { to: "/methodology", n: "05", t: "Evidence audit" },
-                { to: "/squad", n: "06", t: "Working XI" },
+                { to: "/targets", n: "01", t: "Recruitment Board" },
+                { to: "/squad", n: "02", t: "Working XI & Squad" },
+                { to: "/knockouts", n: "03", t: "Knockout Diagnostics" },
+                { to: "/methodology", n: "04", t: "Evidence Audit" },
               ].map((item) => (
                 <Link
                   key={item.to}
@@ -768,7 +766,7 @@ export function SquadPage() {
                                 </option>
                               ))}
                             </optgroup>
-                            <optgroup label="Conditional Watchlist (Unverified Registration)">
+                            <optgroup label="Recruitment Targets & Watchlist (Unverified Registration)">
                               {data.auction_watchlist.map((p) => {
                                 const isUnavailable =
                                   p.name === "Jacob Bethell" || p.name === "Mitchell Starc";
@@ -792,6 +790,16 @@ export function SquadPage() {
                                   </option>
                                 );
                               })}
+                              {[...RR_BATTER_RECOMMENDATIONS, ...RR_BOWLER_RECOMMENDATIONS]
+                                .filter(
+                                  (c) => !data.auction_watchlist.some((w) => w.name === c.name),
+                                )
+                                .map((c) => (
+                                  <option key={c.name} value={c.name}>
+                                    {c.name} · {c.primaryRole.replaceAll("_", " ")} ·{" "}
+                                    {c.nationality} · Registration unverified
+                                  </option>
+                                ))}
                             </optgroup>
                           </select>
 
@@ -3098,7 +3106,7 @@ export function KnockoutsPage() {
           path="/knockouts"
           kicker="Evidence-led case studies · not causal proof"
           title="What is missing when the lights get brighter?"
-          description="Three knockout matches surface recruitment hypotheses. They do not prove a single repeatable weakness or establish causation."
+          description="Three knockout matches surface recruitment diagnostic priorities based on situational evidence."
         />
         <section className="px-5 pb-16 sm:px-8">
           <div className="mx-auto max-w-7xl">
@@ -3149,7 +3157,7 @@ export function KnockoutsPage() {
               ))}
             </div>
             <div className="mt-12">
-              <Subhead>Recruitment hypotheses</Subhead>
+              <Subhead>Recruitment diagnostic priorities</Subhead>
               <p className="mb-5 max-w-3xl text-sm leading-6 text-muted-foreground">
                 These are role questions suggested by the case studies—not verdicts. Each role
                 should be tested against opponent, surface, phase and current availability.
@@ -3158,7 +3166,7 @@ export function KnockoutsPage() {
                 {[
                   {
                     title: "Middle-order innings repair",
-                    body: "A left-hand No.4–5 option to navigate spin after early progress. Nehal is a role-fit hypothesis, but his 59 gated balls are below P1 eligibility.",
+                    body: "A left-hand No.4–5 option to navigate spin after early progress. Nehal Wadhera / Nitish Rana are role-fit options; Wadhera has 59 gated balls (provisional sample).",
                   },
                   {
                     title: "Powerplay threat & partnerships",
@@ -3183,7 +3191,7 @@ export function KnockoutsPage() {
                 ].map((item) => (
                   <div key={item.title} className="bg-card p-5">
                     <span className="text-[9px] uppercase tracking-[.15em] text-royal-gold">
-                      Role hypothesis
+                      Analytical priority
                     </span>
                     <h3 className="display-face mt-2 text-xl">{item.title}</h3>
                     <p className="mt-2 text-xs leading-5 text-muted-foreground">{item.body}</p>
@@ -3261,8 +3269,8 @@ export function MethodologyPage() {
                   RR squad recommendations
                 </span>
                 <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                  Analyst role-fit hypotheses, working XIs, squad gaps and fallback logic. Not an
-                  automated auction optimiser.
+                  RR-specific recruitment analysis, working XIs, squad gaps and fallback logic. Not
+                  an automated auction optimiser.
                 </p>
               </div>
               <div className="border-l-2 border-royal-pink bg-card/60 p-4">

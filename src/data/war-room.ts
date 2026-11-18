@@ -12,8 +12,6 @@ export const navigation = [
   { to: "/", label: "War room" },
   { to: "/squad", label: "Squad" },
   { to: "/targets", label: "Targets" },
-  { to: "/batters", label: "Batters" },
-  { to: "/bowlers", label: "Bowlers" },
   { to: "/knockouts", label: "Knockouts" },
   { to: "/methodology", label: "Data & sources" },
 ] as const;
