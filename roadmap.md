@@ -1,0 +1,5 @@
+- [ ] Add a shared, schema-tolerant data adapter and central market-eligibility rules; preserve the v2 snapshot and exact ranking order, and add specific regression tests.
+- [ ] Redesign recruitment profiles around verified candidate evidence, actionable market status, comparison up to three, useful filters, and a safe Naman Tiwari watchlist profile.
+- [ ] Improve squad scenarios to clearly separate retained squad, proposed XI, bench, additions, overseas limits, and user-entered-only purse assumptions.
+- [ ] Audit playoff and expected-runs coverage; suppress incomplete or unsupported claims and clearly record what source data is still needed.
+- [ ] Verify routes, interactions, desktop/mobile layout, tests and build; review and close every deliverable that available data supports.
