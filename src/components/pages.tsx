@@ -1,0 +1,2541 @@
+import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import {
+  AlertTriangle,
+  ArrowDown,
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  ChevronDown,
+  HeartPulse,
+  RotateCcw,
+  Search,
+  ShieldCheck,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  PageFrame,
+  LeadIn,
+  SectionTitle,
+  Subhead,
+  Metric,
+  PlayerTile,
+  VacancyBays,
+  HeroCTA,
+  SourceLink,
+  StatusLegend,
+  TargetStatus,
+} from "@/components/war-room";
+import {
+  warRoomData,
+  type BatterRank,
+  type BowlerRank,
+  type ReleasedPlayer,
+  type WatchlistPlayer,
+} from "@/data/war-room";
+import stadiumImage from "@/assets/jaipur-stadium.jpg";
+import { cn } from "@/lib/utils";
+
+const data = warRoomData;
+const team = data.team;
+const targetByName = new Map(data.auction_watchlist.map((player) => [player.name, player]));
+const retainedByName = new Map(data.team.retained_players.map((player) => [player.name, player]));
+
+function format(value: number | null | undefined, digits = 2) {
+  return value === null || value === undefined
+    ? "Not available in supplied data"
+    : value.toLocaleString("en-IN", {
+        maximumFractionDigits: digits,
+        minimumFractionDigits: digits,
+      });
+}
+
+function percent(value: number | null | undefined) {
+  return value === null || value === undefined
+    ? "Not available in supplied data"
+    : `${(value * 100).toFixed(1)}%`;
+}
+
+function SnapshotStrip() {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-border py-2 text-[9px] font-semibold uppercase tracking-[.15em] text-muted-foreground">
+      <span className="text-royal-gold">Data snapshot · 18 Nov 2026</span>
+      <span>·</span>
+      <span>Release is not registration</span>
+      <span>·</span>
+      <span>Static decision support</span>
+    </div>
+  );
+}
+
+export function HomePage() {
+  const slashRef = useRef<HTMLElement | null>(null);
+  const [slashActive, setSlashActive] = useState(false);
+  useEffect(() => {
+    const section = slashRef.current;
+    if (!section || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setSlashActive(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.05 },
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <PageFrame>
+      <main>
+        <section className="relative flex min-h-[calc(100svh-64px)] items-center overflow-hidden bg-background">
+          <img
+            src={stadiumImage}
+            alt="Floodlit Jaipur cricket stadium at night, with a green pitch and pink-and-blue stands"
+            className="hero-image"
+            width={1920}
+            height={1024}
+          />
+          <div className="hero-shade" />
+          <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-24 pt-20 sm:px-9 sm:pb-32">
+            <div className="max-w-3xl fade-rise">
+              <div className="mb-7 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[.22em] text-royal-gold">
+                <span className="grid size-9 place-items-center border border-royal-gold/60">
+                  <ShieldCheck size={19} />
+                </span>
+                IPL 2027 · squad snapshot · 18 Nov 2026
+              </div>
+              <h1 className="display-face max-w-3xl text-6xl leading-[.82] text-foreground sm:text-8xl lg:text-9xl">
+                The Royals
+                <br />
+                <span className="text-royal-pink">War Room</span>
+              </h1>
+              <p className="mt-7 max-w-xl text-base leading-7 text-foreground/85 sm:text-lg">
+                Build a side that wins the moments that matter.
+              </p>
+              <HeroCTA />
+            </div>
+          </div>
+          <a
+            href="#squad-reveal"
+            aria-label="Scroll to the retained squad"
+            className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] uppercase tracking-[.18em] text-foreground/80"
+          >
+            Scroll to the squad <ArrowDown size={15} className="animate-bounce" />
+          </a>
+        </section>
+        <section
+          ref={slashRef}
+          id="squad-reveal"
+          className={cn(
+            "slash-transition relative scroll-mt-16 border-y border-royal-gold/30 bg-background px-5 py-16 sm:px-8 sm:py-24",
+            slashActive && "slash-active",
+          )}
+        >
+          <div className="relative z-[4] mx-auto max-w-7xl">
+            <div className="mb-7 grid gap-7 lg:grid-cols-[1fr_auto] lg:items-end">
+              <SectionTitle
+                kicker="The roster reveal · analyst snapshot"
+                title="19 retained. 6 decisions left."
+                description="A 19-player squad is retained or traded in. Tentative role ideas are not a confirmed 2027 playing XI."
+                number="01"
+              />
+              <div className="pb-2">
+                <StatusLegend />
+              </div>
+            </div>
+            <SnapshotStrip />
+            <div className="my-8 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
+              <Metric value="19 / 25" label="Squad places filled" />
+              <Metric value="6" label="Squad places open" accent />
+              <Metric value="₹27.05 Cr" label="Purse remaining" />
+              <Metric value="5 / 8" label="Overseas in squad" />
+              <Metric value="4 max" label="Overseas in playing XI" accent />
+            </div>
+            <div className="pitch-surface border border-border p-4 sm:p-6">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-[9px] uppercase tracking-[.18em] text-royal-gold">
+                    Locked roster · not a starting XI
+                  </p>
+                  <h2 className="display-face mt-1 text-2xl text-foreground">
+                    Retained dugout <span className="text-muted-foreground">/ 19</span>
+                  </h2>
+                </div>
+                <span className="border border-border bg-background/70 px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  5 overseas retained · up to 3 more in squad
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {team.retained_players.map((player) => (
+                  <PlayerTile key={player.name} player={player} compact />
+                ))}
+              </div>
+            </div>
+            <div className="mt-12 grid gap-4 lg:grid-cols-[.7fr_1.3fr] lg:items-start">
+              <div>
+                <p className="text-[10px] uppercase tracking-[.18em] text-royal-pink">
+                  Open roster · role hypotheses only
+                </p>
+                <h2 className="display-face mt-2 text-3xl text-foreground">Six empty bays.</h2>
+                <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
+                  Each position stays vacant until selected. The role labels are questions for the
+                  auction room, not assigned players.
+                </p>
+                <p className="mt-4 border-l-2 border-royal-gold pl-3 text-xs leading-5 text-muted-foreground">
+                  <strong className="text-foreground">Finisher is not vacant:</strong> Donovan
+                  Ferreira is already retained as an overseas lower-order hitter; Shubham Dubey and
+                  Dasun Shanaka add further role options.
+                </p>
+              </div>
+              <VacancyBays />
+            </div>
+            <div className="mt-14 border-t border-border pt-9">
+              <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                <div>
+                  <p className="text-[9px] uppercase tracking-[.16em] text-royal-gold">
+                    Next scene · working-core assumption
+                  </p>
+                  <h2 className="display-face mt-1 text-3xl text-foreground">
+                    A core takes shape.
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">
+                    Nine retained names appear in a proposed role map. Remaining lineup choices and
+                    all six roster bays stay open; the animation does not announce a confirmed XI.
+                  </p>
+                </div>
+                <span className="text-[9px] uppercase tracking-wider text-muted-foreground">
+                  Pitch-side role projection · not selection
+                </span>
+              </div>
+              <div className="pitch-surface grid grid-cols-2 gap-2 border border-border p-3 sm:grid-cols-3 sm:p-5 lg:grid-cols-4">
+                {[
+                  ["Vaibhav Sooryavanshi", "01 · Opener"],
+                  ["Yashasvi Jaiswal", "02 · Opener"],
+                  ["Riyan Parag", "03 · Captain"],
+                  ["Dhruv Jurel", "04 · Wicketkeeper"],
+                  ["Indian middle-order repair", "05 · Target role · vacant"],
+                  ["Donovan Ferreira", "06 · Retained lower-order hitter"],
+                  ["Ravindra Jadeja", "07 · All-rounder / spin"],
+                  ["Ravi Bishnoi / Punja", "08 · Spin choice · conditions"],
+                  ["Jofra Archer", "09 · Strike pace"],
+                  ["Mohammed Shami", "10 · New-ball pace"],
+                  ["Nandre Burger / Sandeep", "11 · Pace combination · rotation"],
+                ].map(([name, role], index) => {
+                  const player = retainedByName.get(name?.split(" /")[0] ?? "");
+                  const isVacant = index === 4;
+                  const playerName = name ?? "Unassigned role";
+                  const playerRole = role ?? "Role to review";
+                  return (
+                    <div
+                      key={playerRole}
+                      className={cn(
+                        "working-card border p-3",
+                        isVacant ? "roster-slot" : "data-card",
+                        index === 10 && "border-dashed",
+                        player?.overseas && "border-royal-gold/50",
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[9px] text-royal-gold">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span className="text-[8px] uppercase tracking-wider text-muted-foreground">
+                          {isVacant
+                            ? "Vacant role"
+                            : index === 10
+                              ? "Retained pace rotation"
+                              : index === 7
+                                ? "Retained / target choice"
+                                : player?.overseas
+                                  ? "Retained · overseas"
+                                  : "Retained · Indian"}
+                        </span>
+                      </div>
+                      <h3 className="display-face mt-3 text-lg leading-tight text-foreground">
+                        {playerName}
+                      </h3>
+                      <p className="mt-1 text-[9px] leading-4 text-muted-foreground">
+                        {playerRole}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
+                Bishnoi / Punja / Siddharth are a conditions-dependent spin choice. Burger, Shami,
+                Sandeep and retained pace depth rotate by phase; the bench is not displayed as
+                starting XI.
+              </p>
+            </div>
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5">
+              <p className="text-xs text-muted-foreground">
+                New auction entrants · awaiting official registration list. Released does not mean
+                registered.
+              </p>
+              <Button asChild variant="outline" className="rounded-sm uppercase tracking-wider">
+                <Link to="/squad">
+                  Open the squad builder <ArrowRight size={14} />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+        <section className="px-5 py-16 sm:px-8 sm:py-20">
+          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_1fr] lg:items-center">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-royal-pink">
+                Horses for courses
+              </p>
+              <h2 className="display-face mt-3 text-4xl leading-none text-foreground sm:text-5xl">
+                Pick the conditions.
+                <br />
+                Build for the moment.
+              </h2>
+              <p className="mt-5 max-w-xl text-sm leading-6 text-muted-foreground">
+                Compare proposed tactical XIs for swing, spin, innings repair and death overs. These
+                are analyst scenarios—not a price model or an official team selection.
+              </p>
+              <Button asChild className="mt-6 rounded-sm uppercase tracking-wider">
+                <Link to="/squad">
+                  Explore proposed XIs <ArrowRight size={14} />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-3">
+              {[
+                { to: "/targets", n: "01", t: "Auction board" },
+                { to: "/batters", n: "02", t: "Pressure batters" },
+                { to: "/bowlers", n: "03", t: "Pressure bowlers" },
+                { to: "/knockouts", n: "04", t: "Knockout cases" },
+                { to: "/methodology", n: "05", t: "Evidence audit" },
+                { to: "/squad", n: "06", t: "Working XI" },
+              ].map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="group flex min-h-28 flex-col justify-between bg-card p-4 transition-colors hover:bg-accent"
+                >
+                  <span className="font-mono text-xs text-royal-gold">{item.n}</span>
+                  <span className="flex items-center justify-between gap-2 text-xs font-semibold uppercase text-foreground">
+                    {item.t}
+                    <ArrowUpRight
+                      size={14}
+                      className="text-royal-pink transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                    />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+    </PageFrame>
+  );
+}
+
+type Scenario = {
+  id: string;
+  title: string;
+  purpose: string;
+  xi: string[];
+  why: string;
+  trade: string;
+  newBall: string;
+  middle: string;
+  death: string;
+  batImpact: string;
+  bowlImpact: string;
+  fallback: string;
+};
+const baseXI = [
+  "Vaibhav Sooryavanshi",
+  "Yashasvi Jaiswal",
+  "Riyan Parag",
+  "Dhruv Jurel",
+  "Shubham Dubey",
+  "Donovan Ferreira",
+  "Ravindra Jadeja",
+  "Ravi Bishnoi",
+  "Jofra Archer",
+  "Mohammed Shami",
+  "Nandre Burger",
+];
+const scenarios: Scenario[] = [
+  {
+    id: "balanced",
+    title: "Core balance · Archer + Shami",
+    purpose: "Core balance / Archer + Shami",
+    xi: baseXI,
+    why: "Archer leads the pace group; Shami adds an Indian new-ball option. Burger's left-arm angle is available when the matchup warrants it. Bishnoi provides the wrist-spin choice.",
+    trade:
+      "Three overseas starters. Nehal is a target, not retained; keep Shubham at No.5 unless a signing is made. Sandeep, Siddharth and Punja stay available by conditions.",
+    newBall: "Archer + Shami; Burger can rotate in",
+    middle: "Bishnoi, Jadeja; Punja / Siddharth by matchup",
+    death:
+      "Role plan around Archer, with Sandeep as a phase-control option; no yorker accuracy claim",
+    batImpact: "Batter from retained bench if chasing",
+    bowlImpact: "Sandeep or Siddharth by surface",
+    fallback:
+      "If Nehal is not signed, retain Shubham Dubey or select another verified Indian No.4–6 option.",
+  },
+  {
+    id: "boult",
+    title: "New-ball squeeze · Boult",
+    purpose: "Jaipur / new-ball swing",
+    xi: [
+      "Vaibhav Sooryavanshi",
+      "Yashasvi Jaiswal",
+      "Riyan Parag",
+      "Dhruv Jurel",
+      "Shubham Dubey",
+      "Donovan Ferreira",
+      "Dasun Shanaka",
+      "Ravi Bishnoi",
+      "Jofra Archer",
+      "Trent Boult",
+      "Mohammed Shami",
+    ],
+    why: "Archer + Boult attack with the new ball; Shami supports the Indian seam group. Boult's supplied role readout is powerplay-heavy (61.2%); death share is 17.3%.",
+    trade:
+      "Ferreira + Archer + Boult + Shanaka use all four overseas XI places; Burger is benched. Shanaka is included only for his all-round contribution. Boult had 2 wickets at 11.63 economy in IPL 2026 and is not the death solution.",
+    newBall: "Archer + Boult + Shami",
+    middle: "Bishnoi + Jadeja; Shanaka only if his all-round role earns the slot",
+    death:
+      "Plan Archer / Sandeep or a separately registered death option; execution metrics not supplied",
+    batImpact: "Retained batting option",
+    bowlImpact: "Sandeep Sharma",
+    fallback:
+      "If Boult is not registered or role/value does not fit, keep a distinct death-specific plan; do not substitute an assumed role.",
+  },
+  {
+    id: "death",
+    title: "Dedicated death attack · Pathirana gate",
+    purpose: "Death-strike attack",
+    xi: [
+      "Vaibhav Sooryavanshi",
+      "Yashasvi Jaiswal",
+      "Riyan Parag",
+      "Dhruv Jurel",
+      "Shubham Dubey",
+      "Donovan Ferreira",
+      "Ravindra Jadeja",
+      "Ravi Bishnoi",
+      "Jofra Archer",
+      "Matheesha Pathirana",
+      "Nandre Burger",
+    ],
+    why: "Archer and Pathirana form the proposed overseas pace pair; Ferreira remains the third overseas player. Nandre Burger can be the optional fourth overseas role; if that adds no value, keep the slot unused and choose Indian seam depth.",
+    trade:
+      "Pathirana remains excluded until medical clearance is explicitly switched on here. This is a scenario gate, not medical evidence or confirmation of auction registration. Shami / Sandeep rotate in for an Indian control role.",
+    newBall: "Archer + Shami or Burger",
+    middle: "Bishnoi + Jadeja",
+    death: "Pathirana only after medical clearance; no clearance is asserted",
+    batImpact: "Retained batting option",
+    bowlImpact: "Sandeep Sharma",
+    fallback:
+      "If Pathirana fails medical clearance: Mustafizur only if cleared and registered, otherwise another registered pace alternative.",
+  },
+  {
+    id: "mustafizur",
+    title: "Left-arm variation · Mustafizur",
+    purpose: "Left-arm variation / Mustafizur",
+    xi: [
+      "Vaibhav Sooryavanshi",
+      "Yashasvi Jaiswal",
+      "Riyan Parag",
+      "Dhruv Jurel",
+      "Shubham Dubey",
+      "Donovan Ferreira",
+      "Ravindra Jadeja",
+      "Ravi Bishnoi",
+      "Jofra Archer",
+      "Mustafizur Rahman",
+      "Nandre Burger",
+    ],
+    why: "Three overseas options plus Ferreira give variation across phases; Mustafizur supplies cutters/left-arm pace while Burger offers another angle.",
+    trade:
+      "Mustafizur is not statistically equivalent to Pathirana: supplied IPL-only death economy 10.28 versus 8.80, with different sample sizes. Registration and current medical status remain unverified.",
+    newBall: "Archer + Burger; Shami as Indian alternative",
+    middle: "Bishnoi + Jadeja",
+    death: "Mustafizur phase option; medical review required",
+    batImpact: "Shubham / retained batter",
+    bowlImpact: "Shami or Sandeep",
+    fallback:
+      "Use only if Mustafizur is registered and medically cleared; otherwise choose a registered pace alternative.",
+  },
+  {
+    id: "spin",
+    title: "Slow pitch · middle-over choke",
+    purpose: "Slow / turning surface",
+    xi: [
+      "Vaibhav Sooryavanshi",
+      "Yashasvi Jaiswal",
+      "Riyan Parag",
+      "Dhruv Jurel",
+      "Shubham Dubey",
+      "Donovan Ferreira",
+      "Ravindra Jadeja",
+      "Ravi Bishnoi",
+      "Manimaran Siddharth",
+      "Jofra Archer",
+      "Mohammed Shami",
+    ],
+    why: "Jadeja + Bishnoi + Siddharth add three Indian spin options, with pace selected around Archer and Shami.",
+    trade:
+      "No forced overseas spin purchase. Hasaranga stays conditional on medical/workload review and showing value beyond Bishnoi, Punja, Jadeja and Siddharth.",
+    newBall: "Archer + Shami",
+    middle: "Jadeja + Bishnoi + Siddharth; Punja alternative",
+    death: "Retained pace roles; exact role depends on match plan",
+    batImpact: "Retained batter",
+    bowlImpact: "Yash Raj Punja / spin option",
+    fallback:
+      "Use existing Indian spin depth if Hasaranga's review or role comparison does not pass.",
+  },
+  {
+    id: "repair",
+    title: "Batting collapse · innings repair",
+    purpose: "Batting collapse / innings repair",
+    xi: [
+      "Vaibhav Sooryavanshi",
+      "Yashasvi Jaiswal",
+      "Riyan Parag",
+      "Dhruv Jurel",
+      "Nehal Wadhera",
+      "Donovan Ferreira",
+      "Ravindra Jadeja",
+      "Ravi Bishnoi",
+      "Jofra Archer",
+      "Mohammed Shami",
+      "Nandre Burger",
+    ],
+    why: "The top four stay intact; a left-hand No.5 repair option sits before retained lower-order hitter Ferreira and Jadeja.",
+    trade:
+      "Nehal is preferred for a No.4–5 innings-repair vacancy, but his 59 pressure-gated balls are below P1 eligibility. Shahrukh is a different No.6–7 power profile, not the preferred repair role.",
+    newBall: "Archer + Shami",
+    middle: "Bishnoi + Jadeja",
+    death: "Archer / Sandeep by phase plan",
+    batImpact: "Retained hitter / wicketkeeper option",
+    bowlImpact: "Sandeep Sharma",
+    fallback:
+      "If Nehal is not acquired, use retained Shubham Dubey or a verified Indian No.4–6 role-fit player.",
+  },
+  {
+    id: "overseas",
+    title: "Four-overseas alternative",
+    purpose: "Overseas-lean alternative",
+    xi: [
+      "Vaibhav Sooryavanshi",
+      "Yashasvi Jaiswal",
+      "Riyan Parag",
+      "Dhruv Jurel",
+      "Shubham Dubey",
+      "Donovan Ferreira",
+      "Ravindra Jadeja",
+      "Ravi Bishnoi",
+      "Jofra Archer",
+      "Nandre Burger",
+      "Dasun Shanaka",
+    ],
+    why: "Ferreira + Archer + Burger + Shanaka use four overseas XI places; Shanaka earns selection only when his all-round role contributes.",
+    trade:
+      "Four overseas slots are full. Adding Boult or Pathirana means Burger, Shanaka or another overseas player must leave. Three overseas is also a valid choice.",
+    newBall: "Archer + Burger + Shami from Indian options",
+    middle: "Bishnoi + Jadeja / Siddharth",
+    death: "Archer with Indian phase support; no execution forecast",
+    batImpact: "Indian retained batting option",
+    bowlImpact: "Sandeep / Siddharth / Shami",
+    fallback:
+      "If a second overseas strike bowler enters, bench Burger or Shanaka based on the role—not overseas quota.",
+  },
+  {
+    id: "highscore",
+    title: "Chase / high-scoring surface",
+    purpose: "Chasing / high-scoring surface",
+    xi: [
+      "Vaibhav Sooryavanshi",
+      "Yashasvi Jaiswal",
+      "Riyan Parag",
+      "Dhruv Jurel",
+      "Shubham Dubey",
+      "Donovan Ferreira",
+      "Dasun Shanaka",
+      "Ravi Bishnoi",
+      "Jofra Archer",
+      "Mohammed Shami",
+      "Sandeep Sharma",
+    ],
+    why: "Keep retained power hitters and choose a bowling group explicitly; three overseas starters leave one XI overseas place unused.",
+    trade:
+      "Dropping an extra specialist bowler reduces bowling coverage. The trade is shown rather than hidden; Shanaka is role-selected, not quota-selected.",
+    newBall: "Archer + Shami",
+    middle: "Bishnoi + Parag option",
+    death: "Archer / Sandeep roles; choose phase cover before prioritising another hitter",
+    batImpact: "Top-order collapse: retained stabilising option",
+    bowlImpact: "Extra seam option if defending",
+    fallback: "Restore a specialist bowler if the pitch or opposition increases bowling demand.",
+  },
+];
+
+function makeSelectClass(extra = "") {
+  return `control ${extra}`;
+}
+export function SquadPage() {
+  const [active, setActive] = useState("balanced");
+  const [pathiranaCleared, setPathiranaCleared] = useState(false);
+  const [mustafizurCleared, setMustafizurCleared] = useState(false);
+  const [hasarangaCleared, setHasarangaCleared] = useState(false);
+  const [lineup, setLineup] = useState<string[]>(baseXI);
+  const [impactSituation, setImpactSituation] = useState("Batting first");
+  const [impactPlayer, setImpactPlayer] = useState("Sandeep Sharma");
+  const [message, setMessage] = useState("");
+  const scenario = scenarios.find((item) => item.id === active) ?? scenarios[0]!;
+  const selected =
+    active === "custom"
+      ? lineup
+      : scenario.xi.map((name) =>
+          (name === "Matheesha Pathirana" && !pathiranaCleared) ||
+          (name === "Mustafizur Rahman" && !mustafizurCleared) ||
+          (name === "Wanindu Hasaranga" && !hasarangaCleared)
+            ? "Sushant Mishra"
+            : name,
+        );
+  const currentOverseas = selected.filter(
+    (name) => retainedByName.get(name)?.overseas ?? targetByName.get(name)?.overseas ?? false,
+  ).length;
+  const chosenTargets = [...new Set(selected.filter((name) => !retainedByName.has(name)))];
+  const overseasAdds = chosenTargets.filter((name) => targetByName.get(name)?.overseas).length;
+  const squadSize = team.squad_size + chosenTargets.length;
+  const unavailable = selected.filter(
+    (name) =>
+      name === "Jacob Bethell" ||
+      name === "Mitchell Starc" ||
+      (name === "Matheesha Pathirana" && !pathiranaCleared) ||
+      (name === "Mustafizur Rahman" && !mustafizurCleared) ||
+      (name === "Wanindu Hasaranga" && !hasarangaCleared),
+  );
+  const roleOptions = [
+    ...team.retained_players.map((player) => player.name),
+    ...data.auction_watchlist
+      .map((player) => player.name)
+      .filter((name) => !["Jacob Bethell", "Mitchell Starc"].includes(name)),
+  ];
+  function chooseScenario(item: Scenario) {
+    setActive(item.id);
+    setLineup(item.xi);
+    setMessage("");
+  }
+  function updateSlot(index: number, value: string) {
+    const next = selected.map((name, i) => (i === index ? value : name));
+    if (next.filter((name, i) => next.indexOf(name) !== i).length > 0) {
+      setMessage(
+        "A player cannot occupy two positions in the same proposed XI. Select a different player for this slot.",
+      );
+      return;
+    }
+    const nextTargets = [...new Set(next.filter((name) => !retainedByName.has(name)))];
+    if (nextTargets.length > team.slots_remaining) {
+      setMessage(
+        "This scenario would add more players than RR's six open squad spaces. Replace a target or keep the role vacant.",
+      );
+      return;
+    }
+    if (
+      team.retained_overseas_count +
+        nextTargets.filter((name) => targetByName.get(name)?.overseas).length >
+      team.overseas_squad_cap
+    ) {
+      setMessage(
+        "RR can add at most three more overseas squad players under the eight-player squad limit. Choose an Indian option or a retained player.",
+      );
+      return;
+    }
+    if (
+      next.filter(
+        (name) => retainedByName.get(name)?.overseas ?? targetByName.get(name)?.overseas ?? false,
+      ).length > 4
+    ) {
+      setMessage(
+        "This XI would have more than four overseas players. Choose an Indian option or bench an overseas player.",
+      );
+      return;
+    }
+    if (next.includes("Matheesha Pathirana") && !pathiranaCleared) {
+      setMessage(
+        "Pathirana stays out of selection until medical clearance is explicitly enabled for this analyst scenario.",
+      );
+      return;
+    }
+    if (next.includes("Mustafizur Rahman") && !mustafizurCleared) {
+      setMessage(
+        "Mustafizur stays out of selection until medical review is explicitly enabled for this analyst scenario.",
+      );
+      return;
+    }
+    if (next.includes("Wanindu Hasaranga") && !hasarangaCleared) {
+      setMessage(
+        "Hasaranga stays out of selection until workload and role-overlap review are explicitly enabled for this analyst scenario.",
+      );
+      return;
+    }
+    if (next.includes("Jacob Bethell") || next.includes("Mitchell Starc")) {
+      setMessage("This player is not selectable under the current availability snapshot.");
+      return;
+    }
+    setLineup(next);
+    setActive("custom");
+    setMessage("");
+  }
+  const impactChoices =
+    impactSituation === "Slow pitch"
+      ? ["Yash Raj Punja", "Manimaran Siddharth", "Ravi Bishnoi", "Ravindra Jadeja"]
+      : impactSituation === "Flat / dewy pitch" || impactSituation === "Batting first"
+        ? ["Sandeep Sharma", "Brijesh Sharma", "Sushant Mishra", "Mohammed Shami"]
+        : ["Shubham Dubey", "Nehal Wadhera", "Donovan Ferreira", "Aman Rao Perala"];
+  return (
+    <PageFrame>
+      <main>
+        <LeadIn
+          path="/squad"
+          kicker="Roster construction · analyst scenario builder"
+          title="The working XI"
+          description="Switch conditions and role hypotheses, then edit the proposed XI. Squad counts respond to target selections; no scenario is an official confirmed lineup."
+        />
+        <section className="px-5 pb-16 sm:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid grid-cols-2 gap-4 border-y border-border py-5 sm:grid-cols-3 lg:grid-cols-6">
+              <Metric value={`${squadSize} / 25`} label="Scenario squad" />
+              <Metric
+                value={Math.max(0, team.max_squad_size - squadSize)}
+                label="Squad spaces left"
+                accent
+              />
+              <Metric value={`${currentOverseas} / 4`} label="Overseas in proposed XI" accent />
+              <Metric
+                value={`${team.retained_overseas_count + overseasAdds} / 8`}
+                label="Overseas in squad scenario"
+              />
+              <Metric value="₹27.05 Cr" label="Purse snapshot" />
+              <Metric value="19 retained" label="Roster locked" />
+            </div>
+            <div className="my-8 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[.18em] text-royal-pink">
+                  Horses for courses
+                </p>
+                <h2 className="display-face mt-1 text-3xl">Choose a match plan</h2>
+              </div>
+              <span className="border border-royal-gold/40 px-3 py-2 text-[10px] uppercase tracking-wider text-royal-gold">
+                Proposed scenario · analyst working XI
+              </span>
+            </div>
+            <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
+              {scenarios.map((item) => (
+                <Button
+                  key={item.id}
+                  size="sm"
+                  variant={active === item.id ? "default" : "outline"}
+                  className="shrink-0 rounded-sm text-[10px] uppercase"
+                  onClick={() => chooseScenario(item)}
+                >
+                  {item.title.split(" · ")[0]}
+                </Button>
+              ))}
+            </div>
+            <div className="grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
+              <div className="pitch-surface border border-border p-4 sm:p-6">
+                <div className="mb-5 flex flex-wrap justify-between gap-3">
+                  <div>
+                    <p className="text-[9px] uppercase tracking-[.16em] text-royal-gold">
+                      {scenario.purpose}
+                    </p>
+                    <h3 className="display-face mt-1 text-2xl sm:text-3xl">{scenario.title}</h3>
+                  </div>
+                  <span
+                    className={cn(
+                      "h-fit border px-3 py-2 text-xs font-bold",
+                      currentOverseas > 4
+                        ? "border-destructive text-destructive"
+                        : "border-border text-foreground",
+                    )}
+                  >
+                    {currentOverseas} / 4 overseas
+                  </span>
+                </div>
+                <div className="mb-4 grid grid-cols-[42px_1fr] gap-2 border-b border-border pb-2 text-[9px] uppercase tracking-widest text-muted-foreground">
+                  <span>Bat</span>
+                  <span>Player · select to change</span>
+                </div>
+                <div className="space-y-1.5">
+                  {selected.map((name, index) => {
+                    const retained = retainedByName.get(name);
+                    const target = targetByName.get(name);
+                    const player = retained ?? target;
+                    const overseas = player?.overseas ?? false;
+                    const unavailableOption = name === "Jacob Bethell" || name === "Mitchell Starc";
+                    const gate =
+                      (name === "Matheesha Pathirana" && !pathiranaCleared) ||
+                      (name === "Mustafizur Rahman" && !mustafizurCleared) ||
+                      (name === "Wanindu Hasaranga" && !hasarangaCleared);
+                    return (
+                      <div
+                        key={`${index}-${name}`}
+                        className="grid grid-cols-[42px_1fr] items-center gap-2 border-b border-border/60 py-1.5"
+                      >
+                        <span className="font-mono text-xs text-royal-gold">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <select
+                            aria-label={`Batting slot ${index + 1}`}
+                            value={name}
+                            onChange={(event) => updateSlot(index, event.target.value)}
+                            className={makeSelectClass("min-w-0 flex-1")}
+                          >
+                            <optgroup label="Retained">
+                              <option value={name}>
+                                {name} · {retained?.role ?? target?.role ?? "role to review"}
+                              </option>
+                            </optgroup>
+                            <optgroup label="Choose player">
+                              {roleOptions.map((option) => {
+                                const p = retainedByName.get(option) ?? targetByName.get(option);
+                                const gateDisabled =
+                                  (option === "Matheesha Pathirana" && !pathiranaCleared) ||
+                                  (option === "Mustafizur Rahman" && !mustafizurCleared) ||
+                                  (option === "Wanindu Hasaranga" && !hasarangaCleared);
+                                return (
+                                  <option
+                                    key={option}
+                                    value={option}
+                                    disabled={
+                                      gateDisabled ||
+                                      option === "Jacob Bethell" ||
+                                      option === "Mitchell Starc"
+                                    }
+                                  >
+                                    {option}
+                                    {p?.overseas ? " · Overseas" : " · Indian"}
+                                    {targetByName.has(option) ? " · registration unverified" : ""}
+                                    {gateDisabled ? " · medical review required" : ""}
+                                  </option>
+                                );
+                              })}
+                            </optgroup>
+                          </select>
+                          <span
+                            className={cn(
+                              "shrink-0 border px-2 py-1 text-[8px] uppercase tracking-wide",
+                              overseas
+                                ? "border-royal-gold/60 text-royal-gold"
+                                : "border-border text-muted-foreground",
+                            )}
+                          >
+                            {retained ? "Retained" : target ? "Target · unverified" : "Squad"}
+                          </span>
+                          {(unavailableOption || gate) && (
+                            <span className="text-[9px] text-destructive">
+                              {gate ? "Medical gate" : "Unavailable"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {message && (
+                  <p
+                    role="alert"
+                    className="mt-4 flex items-start gap-2 border border-destructive/60 p-3 text-xs leading-5 text-destructive"
+                  >
+                    <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                    {message}
+                  </p>
+                )}
+                {unavailable.length > 0 && (
+                  <p className="mt-4 text-xs text-destructive">
+                    Unavailable / gated selection detected: {unavailable.join(", ")}
+                  </p>
+                )}
+                <div className="mt-5 flex flex-wrap gap-4 border-t border-border pt-4 text-[10px] text-muted-foreground">
+                  <span>Squad scenario: {squadSize} / 25</span>
+                  <span>Added targets: {chosenTargets.length}</span>
+                  <span>New overseas in scenario: {overseasAdds} / 3</span>
+                </div>
+              </div>
+              <aside className="space-y-5">
+                <div className="border border-border p-5">
+                  <p className="text-[9px] uppercase tracking-[.16em] text-royal-pink">
+                    Why this combination
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-foreground">{scenario.why}</p>
+                  <div className="my-4 section-rule" />
+                  <p className="text-[9px] uppercase tracking-[.16em] text-royal-gold">Trade-off</p>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{scenario.trade}</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                  {[
+                    ["New ball", scenario.newBall],
+                    ["Middle-over control", scenario.middle],
+                    ["Death-over plan", scenario.death],
+                    ["Fallback", scenario.fallback],
+                  ].map(([label, value]) => (
+                    <div key={label} className="border-l border-royal-gold/60 bg-card/60 px-4 py-3">
+                      <p className="text-[9px] uppercase tracking-wider text-royal-gold">{label}</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </aside>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {[
+                ["Batting first", scenario.batImpact],
+                ["Bowling first", scenario.bowlImpact],
+              ].map(([label, value]) => (
+                <div key={label} className="border border-border p-4">
+                  <p className="text-[9px] uppercase tracking-wider text-royal-pink">
+                    Likely Impact Player · {label}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-12 grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+              <div className="border border-border p-5">
+                <Subhead>Impact Player</Subhead>
+                <p className="mb-4 text-xs leading-5 text-muted-foreground">
+                  Regulation continues in the 2025–27 cycle; final 2027 playing conditions remain
+                  subject to official confirmation. It does not bypass the overseas cap.
+                </p>
+                <label className="mb-2 block text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Match situation
+                </label>
+                <select
+                  value={impactSituation}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const options =
+                      value === "Slow pitch"
+                        ? [
+                            "Yash Raj Punja",
+                            "Manimaran Siddharth",
+                            "Ravi Bishnoi",
+                            "Ravindra Jadeja",
+                          ]
+                        : value === "Flat / dewy pitch" || value === "Batting first"
+                          ? ["Sandeep Sharma", "Brijesh Sharma", "Sushant Mishra", "Mohammed Shami"]
+                          : [
+                              "Shubham Dubey",
+                              "Nehal Wadhera",
+                              "Donovan Ferreira",
+                              "Aman Rao Perala",
+                            ];
+                    setImpactSituation(value);
+                    setImpactPlayer(options[0] ?? "");
+                  }}
+                  className={makeSelectClass("mb-4")}
+                >
+                  <option>Batting first</option>
+                  <option>Bowling first</option>
+                  <option>Slow pitch</option>
+                  <option>Flat / dewy pitch</option>
+                  <option>Top-order collapse</option>
+                </select>
+                <label className="mb-2 block text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Impact option
+                </label>
+                <select
+                  value={impactPlayer}
+                  onChange={(e) => setImpactPlayer(e.target.value)}
+                  className={makeSelectClass()}
+                >
+                  {impactChoices.map((name) => (
+                    <option key={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-4 border border-border p-5">
+                <div>
+                  <Subhead>Medical & role-review gates</Subhead>
+                  <p className="mb-3 text-xs leading-5 text-muted-foreground">
+                    These analyst controls do not certify fitness or registration; they only expose
+                    conditional targets to this editable scenario after review.
+                  </p>
+                </div>
+                {[
+                  {
+                    name: "Matheesha Pathirana",
+                    checked: pathiranaCleared,
+                    set: setPathiranaCleared,
+                    summary: "Hamstring surgery / recovery; clearance is a hard gate.",
+                  },
+                  {
+                    name: "Mustafizur Rahman",
+                    checked: mustafizurCleared,
+                    set: setMustafizurCleared,
+                    summary: "Medical status and registration require verification.",
+                  },
+                  {
+                    name: "Wanindu Hasaranga",
+                    checked: hasarangaCleared,
+                    set: setHasarangaCleared,
+                    summary: "Medical/workload review and spin-role overlap check required.",
+                  },
+                ].map((gate) => (
+                  <label
+                    key={gate.name}
+                    className="flex cursor-pointer items-start gap-3 border-t border-border pt-3"
+                  >
+                    <input
+                      aria-label={`Enable ${gate.name} analyst review gate`}
+                      type="checkbox"
+                      checked={gate.checked}
+                      onChange={(e) => {
+                        const enabled = e.target.checked;
+                        gate.set(enabled);
+                        if (!enabled)
+                          setLineup((current) =>
+                            current.map((name) => (name === gate.name ? "Sushant Mishra" : name)),
+                          );
+                      }}
+                      className="mt-1 size-4 accent-[var(--color-royal-pink)]"
+                    />
+                    <span>
+                      <b className="block text-sm text-foreground">{gate.name}</b>
+                      <small className="mt-1 block text-xs text-muted-foreground">
+                        {gate.summary}
+                      </small>
+                      <small className="mt-1 block text-[9px] text-royal-gold">
+                        {gate.checked
+                          ? "Analyst review gate enabled; current status not independently verified"
+                          : "Requires review before selection"}
+                      </small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="mt-12 grid gap-8 xl:grid-cols-[1fr_1fr]">
+              <div>
+                <Subhead
+                  trailing={
+                    <span className="text-[10px] text-muted-foreground">
+                      All 19 retained · squad, not XI
+                    </span>
+                  }
+                >
+                  Retained roster
+                </Subhead>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {team.retained_players.map((p) => (
+                    <PlayerTile key={p.name} player={p} compact />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Subhead
+                  trailing={
+                    <span className="text-[10px] text-royal-pink">
+                      {6 - chosenTargets.length} unfilled places
+                    </span>
+                  }
+                >
+                  Vacant squad places
+                </Subhead>
+                <VacancyBays compact selectedPlayers={chosenTargets} />
+                <p className="mt-4 text-xs text-muted-foreground">
+                  To fill all six spaces, at least three additions must be Indian: only three
+                  additional overseas players fit the 8-player squad cap.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </PageFrame>
+  );
+}
+
+const candidateFilters = [
+  "All roles",
+  "Indian batter",
+  "Indian fast",
+  "Overseas powerplay",
+  "Overseas death",
+  "Spin all-rounder",
+  "Development prospect",
+];
+function getRoleFilter(player: WatchlistPlayer) {
+  if (["Nehal Wadhera", "M Shahrukh Khan"].includes(player.name)) return "Indian batter";
+  if (["Mangesh Yadav", "Onkar Tarmale", "Akash Madhwal"].includes(player.name))
+    return "Indian fast";
+  if (player.name === "Trent Boult") return "Overseas powerplay";
+  if (["Matheesha Pathirana", "Mustafizur Rahman"].includes(player.name)) return "Overseas death";
+  if (player.name === "Wanindu Hasaranga") return "Spin all-rounder";
+  return "Development prospect";
+}
+function getPriority(player: WatchlistPlayer) {
+  if (player.name === "Nehal Wadhera") return "Primary";
+  if (["Jacob Bethell", "Mitchell Starc"].includes(player.name)) return "Avoid";
+  if (["Mangesh Yadav", "Onkar Tarmale", "Vihaan Malhotra", "Akash Madhwal"].includes(player.name))
+    return "Developmental";
+  return "Alternative";
+}
+function getCountry(player: WatchlistPlayer) {
+  const countries: Record<string, string> = {
+    "Nehal Wadhera": "India",
+    "Mangesh Yadav": "India",
+    "Onkar Tarmale": "India",
+    "Vihaan Malhotra": "India",
+    "Akash Madhwal": "India",
+    "Trent Boult": "New Zealand",
+    "Mitchell Starc": "Australia",
+    "Jacob Bethell": "England",
+    "Wanindu Hasaranga": "Sri Lanka",
+    "Matheesha Pathirana": "Sri Lanka",
+    "Mustafizur Rahman": "Bangladesh",
+    "Shimron Hetmyer": "West Indies",
+    "M Shahrukh Khan": "India",
+  };
+  return countries[player.name] ?? "Not available in supplied data";
+}
+function getRisk(player: WatchlistPlayer) {
+  if (player.name === "Jacob Bethell") return "Unavailable";
+  if (player.name === "Mitchell Starc") return "Unavailable";
+  if (["Matheesha Pathirana", "Wanindu Hasaranga"].includes(player.name)) return "High";
+  const copy = [...player.risks, player.case_for].join(" ").toLowerCase();
+  if (
+    /poor|high risk|hard gate|limited|unproven|not p1|not a proven|workload|pressure sample|overlap/.test(
+      copy,
+    )
+  )
+    return "High";
+  if (/unverified|uncertain|role-specific|price|sample|medical|registration/.test(copy))
+    return "Medium";
+  return "Low";
+}
+function targetReportDate(player: WatchlistPlayer) {
+  if (player.name === "Jacob Bethell") return "18 Nov 2026 · ICC / RCB reporting";
+  if (player.name === "Mitchell Starc") return "17 Nov 2026 · Reuters workload report";
+  if (player.name === "Wanindu Hasaranga")
+    return "Feb 2026 injury report; Sep 2026 squad return; newer clearance not supplied";
+  if (player.name === "Vihaan Malhotra") return "18 Nov 2026 · current profile / form update";
+  return "18 Nov 2026 snapshot; newer status not supplied";
+}
+function WatchCard({
+  player,
+  onCompare,
+  compared,
+}: {
+  player: WatchlistPlayer;
+  onCompare: () => void;
+  compared: boolean;
+}) {
+  const disabled = player.name === "Jacob Bethell" || player.name === "Mitchell Starc";
+  const evidence = player.project_evidence as Record<string, string | number | undefined>;
+  return (
+    <article
+      className={cn(
+        "data-card flex min-h-full flex-col border-t-2 p-4",
+        player.name === "Nehal Wadhera" ? "border-t-royal-gold" : "border-t-border",
+        disabled && "opacity-75",
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <span className="text-[9px] uppercase tracking-wider text-royal-gold">
+            {player.category} · {getPriority(player)}
+          </span>
+          <h3 className="display-face mt-1 text-2xl leading-none text-foreground">{player.name}</h3>
+        </div>
+        <span className="border border-border px-2 py-1 text-[8px] uppercase text-muted-foreground">
+          {player.overseas ? "Overseas" : "India"}
+        </span>
+      </div>
+      <div className="mt-3">
+        <TargetStatus player={player} />
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          <span className="text-foreground">Country:</span> {getCountry(player)} ·{" "}
+          <span className="text-foreground">Batting hand:</span>{" "}
+          {player.batting_hand ?? "Not available in supplied data"}
+        </p>
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          <span className="text-foreground">Role / style:</span> {player.role}
+        </p>
+        <p className="mt-2 text-xs leading-5 text-foreground">{player.role_fit}</p>
+        <p className="mt-2 text-[9px] leading-4 text-muted-foreground">
+          Status report: {targetReportDate(player)}
+        </p>
+      </div>
+      <div className="my-4 border-l border-royal-gold/60 pl-3">
+        <span className="text-[9px] uppercase tracking-wider text-royal-gold">
+          Evidence snapshot
+        </span>
+        <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{player.case_for}</p>
+      </div>
+      {Object.keys(evidence).length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {Object.entries(evidence).map(([label, value]) => (
+            <span
+              key={label}
+              className="border border-border px-2 py-1 text-[9px] text-muted-foreground"
+            >
+              {label.replaceAll("_", " ")}: <b className="text-foreground">{String(value)}</b>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="mt-auto">
+        <p className="mb-2 text-[9px] font-bold uppercase tracking-wider text-royal-pink">
+          Released ≠ registered
+        </p>
+        <details className="mb-3 text-[10px] text-muted-foreground">
+          <summary className="cursor-pointer">Risk & fallback</summary>
+          <ul className="list-disc space-y-1 pl-4 pt-2">
+            {player.risks.map((risk) => (
+              <li key={risk}>{risk}</li>
+            ))}
+          </ul>
+          <p className="mt-2 font-semibold text-foreground">
+            Fallback:{" "}
+            {player.name === "Nehal Wadhera"
+              ? "Shubham Dubey / another verified Indian middle-order option"
+              : player.name === "Matheesha Pathirana"
+                ? "Mustafizur only if medically cleared and registered; otherwise a registered pace alternative"
+                : player.name === "Trent Boult"
+                  ? "Keep a separate death-specific plan"
+                  : player.name === "Wanindu Hasaranga"
+                    ? "Use existing Indian spin depth if workload/role review fails"
+                    : "Choose a registered alternative that solves the same role."}
+          </p>
+        </details>
+        <div className="flex items-center justify-between gap-2">
+          <SourceLink href={player.sources?.[0]}>Status source</SourceLink>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={disabled || compared}
+            onClick={onCompare}
+            className="rounded-sm text-[9px] uppercase"
+          >
+            {disabled ? "Not selectable" : compared ? "Added" : "Compare +"}
+          </Button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export function TargetsPage() {
+  const [search, setSearch] = useState("");
+  const [role, setRole] = useState("All roles");
+  const [status, setStatus] = useState("All statuses");
+  const [priority, setPriority] = useState("All priorities");
+  const [risk, setRisk] = useState("All risks");
+  const [compared, setCompared] = useState<string[]>([]);
+  const [marketSearch, setMarketSearch] = useState("");
+  const [franchise, setFranchise] = useState("All franchises");
+  const [marketStatus, setMarketStatus] = useState("All statuses");
+  const [showRegister, setShowRegister] = useState(false);
+  const [scenarioBase, setScenarioBase] = useState("");
+  const [ceiling, setCeiling] = useState("");
+  const [rivals, setRivals] = useState("0");
+  const [scenarioTarget, setScenarioTarget] = useState("Nehal Wadhera");
+  const [toast, setToast] = useState("");
+  const filteredTargets = data.auction_watchlist.filter((p) => {
+    const text = `${p.name} ${p.role} ${p.category} ${p.team_released_from}`.toLowerCase();
+    const statusMatch =
+      status === "All statuses" ||
+      (status === "Unavailable"
+        ? p.name === "Jacob Bethell"
+        : status === "Medical review"
+          ? ["Matheesha Pathirana", "Wanindu Hasaranga"].includes(p.name)
+          : status === "Availability unconfirmed"
+            ? p.name === "Mitchell Starc"
+            : p.name !== "Jacob Bethell" && p.name !== "Mitchell Starc");
+    return (
+      text.includes(search.toLowerCase()) &&
+      (role === "All roles" || getRoleFilter(p) === role) &&
+      statusMatch &&
+      (priority === "All priorities" || getPriority(p) === priority) &&
+      (risk === "All risks" || getRisk(p) === risk)
+    );
+  });
+  const marketPlayers = data.released_player_reference.players.filter(
+    (p) =>
+      `${p.player_name} ${p.released_from_franchise}`
+        .toLowerCase()
+        .includes(marketSearch.toLowerCase()) &&
+      (franchise === "All franchises" || p.released_from_franchise === franchise) &&
+      (marketStatus === "All statuses" || marketStatusFor(p) === marketStatus),
+  );
+  function addCompare(name: string) {
+    if (compared.length >= 4) {
+      setToast("Comparison holds up to four targets.");
+      return;
+    }
+    setCompared([...compared, name]);
+    setToast("");
+  }
+  const purseLeft =
+    scenarioBase !== "" && Number.isFinite(Number(scenarioBase))
+      ? team.purse_remaining_crore - Number(scenarioBase)
+      : null;
+  const fallback =
+    scenarioTarget === "Nehal Wadhera"
+      ? "Shubham Dubey / another verified Indian No.4–6 option"
+      : scenarioTarget === "Matheesha Pathirana"
+        ? "Mustafizur only if cleared and registered; otherwise registered pace alternative"
+        : scenarioTarget === "Trent Boult"
+          ? "Keep a separate death-specific plan"
+          : scenarioTarget === "Wanindu Hasaranga"
+            ? "Indian spin group: Bishnoi / Punja / Jadeja / Siddharth"
+            : "Role-fit registered alternative; do not chase beyond the set ceiling";
+  return (
+    <PageFrame>
+      <main>
+        <LeadIn
+          path="/targets"
+          kicker="Shortlist · released is not registration"
+          title="The target board"
+          description="A research shortlist—not a shopping catalogue. Compare role evidence, risk, squad overlap and the real overseas-slot cost before selecting a scenario."
+        />
+        <section className="px-5 pb-16 sm:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+              <div className="relative min-w-48 flex-1">
+                <Search
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  aria-label="Search target shortlist"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search player, role or team"
+                  className="pl-9"
+                />
+              </div>
+              <FilterControl
+                ariaLabel="Filter by role"
+                value={role}
+                setValue={setRole}
+                options={candidateFilters}
+              />
+              <FilterControl
+                ariaLabel="Filter by status"
+                value={status}
+                setValue={setStatus}
+                options={[
+                  "All statuses",
+                  "Released / registration unverified",
+                  "Medical review",
+                  "Availability unconfirmed",
+                  "Unavailable",
+                ]}
+              />
+              <FilterControl
+                ariaLabel="Filter by priority"
+                value={priority}
+                setValue={setPriority}
+                options={["All priorities", "Primary", "Alternative", "Developmental", "Avoid"]}
+              />
+              <FilterControl
+                ariaLabel="Filter by risk"
+                value={risk}
+                setValue={setRisk}
+                options={["All risks", "Low", "Medium", "High", "Unavailable"]}
+              />
+            </div>
+            <p className="-mt-3 mb-4 text-[9px] text-muted-foreground">
+              Priority is from the supplied shortlist. Risk filter is an editorial read of the
+              listed caveats, not a model score.
+            </p>
+            <p className="mb-4 text-[10px] uppercase tracking-wider text-muted-foreground">
+              {filteredTargets.length} researched watchlist profiles · {compared.length} / 4 in
+              comparison
+            </p>
+            {toast && (
+              <p role="status" className="mb-3 text-xs text-royal-gold">
+                {toast}
+              </p>
+            )}
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {filteredTargets.map((p) => (
+                <WatchCard
+                  key={p.name}
+                  player={p}
+                  compared={compared.includes(p.name)}
+                  onCompare={() => addCompare(p.name)}
+                />
+              ))}
+            </div>
+            <section className="mt-10 border-y border-royal-gold/40 py-7">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="text-[9px] uppercase tracking-[.16em] text-royal-pink">
+                    Awaiting official publication
+                  </p>
+                  <h2 className="display-face mt-1 text-3xl">New auction entrants</h2>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    No names added until the official registration list is supplied. Reported
+                    schedule: registration reportedly closes 23 Nov; additions through 27 Nov; final
+                    list expected 3 Dec.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="rounded-sm uppercase"
+                  onClick={() =>
+                    setToast(
+                      "No official registration feed is connected. This local control does not refresh or verify the list.",
+                    )
+                  }
+                >
+                  Refresh auction list <RotateCcw size={14} />
+                </Button>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-4 text-[10px] uppercase tracking-wider text-muted-foreground">
+                <span>
+                  Auction date: {data.auction.auction_date} · {data.auction.auction_time}
+                </span>
+                <span>Venue: {data.auction.venue}</span>
+                <span>Registration timeline: reported</span>
+              </div>
+              <div className="mt-5 border border-dashed border-border px-4 py-5 text-center text-[10px] uppercase tracking-wider text-muted-foreground">
+                Waiting for official auction registration list · No entrants added
+              </div>
+            </section>
+
+            <section className="mt-14">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="text-[9px] uppercase tracking-[.16em] text-royal-gold">
+                    Reference pool · not a recommendation list
+                  </p>
+                  <h2 className="display-face mt-1 text-3xl">89 released-player register</h2>
+                  <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">
+                    Transcribed from the user-supplied 2027 released-player reference. Release does
+                    not confirm registration, fitness, willingness to play or RR fit.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="rounded-sm uppercase"
+                  onClick={() => setShowRegister(!showRegister)}
+                >
+                  {showRegister ? "Hide register" : "Search all 89 players"}
+                  <ChevronDown size={14} className={cn(showRegister && "rotate-180")} />
+                </Button>
+              </div>
+              <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <Metric value="89" label="Reference entries" accent />
+                <Metric
+                  value={Object.keys(data.released_player_reference.franchise_counts).length}
+                  label="Franchises"
+                />
+                <Metric value="TBD" label="New entrants" />
+                <Metric value="18 Nov 2026" label="Snapshot date" />
+              </div>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {Object.entries(data.released_player_reference.franchise_counts).map(
+                  ([name, count]) => (
+                    <span
+                      key={name}
+                      className="border border-border px-2 py-1 text-[9px] text-muted-foreground"
+                    >
+                      {name}: <b className="text-foreground">{count}</b>
+                    </span>
+                  ),
+                )}
+              </div>
+              {showRegister && (
+                <div className="mt-5 border border-border">
+                  <div className="grid gap-2 border-b border-border p-3 sm:grid-cols-[1fr_220px_220px]">
+                    <div className="relative">
+                      <Search
+                        size={15}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      />
+                      <Input
+                        aria-label="Search released player reference"
+                        placeholder="Search all 89 names"
+                        value={marketSearch}
+                        onChange={(e) => setMarketSearch(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    <FilterControl
+                      ariaLabel="Filter released player franchise"
+                      value={franchise}
+                      setValue={setFranchise}
+                      options={[
+                        "All franchises",
+                        ...Object.keys(data.released_player_reference.franchise_counts),
+                      ]}
+                    />
+                    <FilterControl
+                      ariaLabel="Filter released player status"
+                      value={marketStatus}
+                      setValue={setMarketStatus}
+                      options={[
+                        "All statuses",
+                        "Released · registration unverified",
+                        "Availability unconfirmed",
+                        "Unavailable for IPL 2027",
+                        "Retired / mentor",
+                      ]}
+                    />
+                  </div>
+                  <p className="px-3 py-2 text-[9px] uppercase tracking-wider text-muted-foreground">
+                    Showing {marketPlayers.length} · Salary field unit not specified · no player
+                    selection from this reference-only table
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[850px] border-collapse text-left text-xs">
+                      <thead className="bg-secondary text-[9px] uppercase tracking-wider text-muted-foreground">
+                        <tr>
+                          {[
+                            "Player",
+                            "Released from",
+                            "Source mark",
+                            "source salary field (unit not specified)",
+                            "Availability status",
+                          ].map((x) => (
+                            <th key={x} className="px-3 py-3 font-semibold">
+                              {x}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {marketPlayers.map((p) => (
+                          <ReleasedRow key={p.player_name} player={p} />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="mt-14 border-t border-border pt-8">
+              <Subhead>
+                Compare tray{" "}
+                <span className="ml-2 font-sans text-xs text-muted-foreground">
+                  {compared.length} / 4
+                </span>
+              </Subhead>
+              {compared.length === 0 ? (
+                <p className="border border-dashed border-border p-5 text-xs text-muted-foreground">
+                  Add a shortlist candidate above to compare phase fit, evidence, status and
+                  fallback side-by-side.
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[760px] border-collapse text-left text-[10px]">
+                    <thead>
+                      <tr>
+                        <th className="w-40 p-2 text-muted-foreground">Comparison</th>
+                        {compared.map((name) => (
+                          <th key={name} className="border-b border-border p-2">
+                            <span className="flex items-center justify-between gap-2 text-sm text-foreground">
+                              {name}
+                              <Button
+                                aria-label={`Remove ${name} from comparison`}
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => setCompared(compared.filter((x) => x !== name))}
+                              >
+                                <X size={14} />
+                              </Button>
+                            </span>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        "Indian / overseas",
+                        "Batting hand / bowling type",
+                        "Intended role",
+                        "Phase expertise",
+                        "P1 rank / top-10 probability",
+                        "IPL-only role metrics",
+                        "Availability / medical status",
+                        "Squad overlap",
+                        "Registration status",
+                        "Fallback",
+                      ].map((field) => (
+                        <tr key={field} className="border-b border-border/60">
+                          <th className="p-2 text-left font-medium text-muted-foreground">
+                            {field}
+                          </th>
+                          {compared.map((name) => {
+                            const p = targetByName.get(name);
+                            return (
+                              <td key={name} className="max-w-64 p-2 leading-5 text-foreground">
+                                {p ? comparisonValue(p, field) : "Not available in supplied data"}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+
+            <section className="mt-14 grid gap-8 border-t border-border pt-9 lg:grid-cols-[1fr_1fr]">
+              <div>
+                <p className="text-[9px] uppercase tracking-[.16em] text-royal-pink">
+                  Manual only · analyst-entered assumption
+                </p>
+                <h2 className="display-face mt-1 text-3xl">Auction value scenario</h2>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                  No price prediction or validated auction valuation model exists. Enter your own
+                  base price and maximum bid ceiling; rival count is a scenario input, not a price
+                  forecast.
+                </p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Target
+                    <select
+                      aria-label="Scenario target"
+                      value={scenarioTarget}
+                      onChange={(e) => setScenarioTarget(e.target.value)}
+                      className={makeSelectClass("mt-2")}
+                    >
+                      {data.auction_watchlist
+                        .filter((p) => !["Jacob Bethell", "Mitchell Starc"].includes(p.name))
+                        .map((p) => (
+                          <option key={p.name}>{p.name}</option>
+                        ))}
+                    </select>
+                  </label>
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Your entered base price (₹ Cr)
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.05"
+                      value={scenarioBase}
+                      onChange={(e) => setScenarioBase(e.target.value)}
+                      placeholder="Enter manually"
+                      className="mt-2"
+                    />
+                  </label>
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Your maximum bid ceiling (₹ Cr)
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.05"
+                      value={ceiling}
+                      onChange={(e) => setCeiling(e.target.value)}
+                      placeholder="Set walk-away ceiling"
+                      className="mt-2"
+                    />
+                  </label>
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Rival bidders (0–3)
+                    <select
+                      aria-label="Rival bidders"
+                      value={rivals}
+                      onChange={(e) => setRivals(e.target.value)}
+                      className={makeSelectClass("mt-2")}
+                    >
+                      {[0, 1, 2, 3].map((x) => (
+                        <option key={x} value={x}>
+                          {x}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="mt-5 border-l-2 border-royal-gold bg-card/70 p-4">
+                  <p className="text-[9px] uppercase tracking-wider text-royal-gold">
+                    Your scenario · not a model prediction
+                  </p>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-[9px] text-muted-foreground">
+                        Hypothetical entered amount
+                      </span>
+                      <b className="mt-1 block text-lg text-foreground">
+                        {scenarioBase ? `₹${format(Number(scenarioBase))} Cr` : "Not entered"}
+                      </b>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-muted-foreground">
+                        Budget left after hypothetical bid
+                      </span>
+                      <b className="mt-1 block text-lg text-foreground">
+                        {purseLeft === null ? "Not entered" : `₹${format(purseLeft)} Cr`}
+                      </b>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-muted-foreground">
+                        Rival bidder scenario
+                      </span>
+                      <b className="mt-1 block text-lg text-foreground">{rivals}</b>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-muted-foreground">Walk-away threshold</span>
+                      <b className="mt-1 block text-lg text-royal-pink">
+                        {ceiling ? `₹${format(Number(ceiling))} Cr` : "Set ceiling"}
+                      </b>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
+                    Fallback if the ceiling is crossed: {fallback}.
+                  </p>
+                  {scenarioBase !== "" &&
+                    ceiling !== "" &&
+                    Number(scenarioBase) > Number(ceiling) && (
+                      <p
+                        role="status"
+                        className="mt-3 flex items-center gap-2 text-xs font-bold text-destructive"
+                      >
+                        <AlertTriangle size={14} />
+                        Your entered base is above your ceiling. Walk away and use the fallback:{" "}
+                        {fallback}.
+                      </p>
+                    )}
+                </div>
+                <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
+                  Revise after the official registered-player list and competitor needs are known.
+                  The printed release reference salary is not used here.
+                </p>
+              </div>
+              <div className="border-l border-border pl-5">
+                <p className="text-[9px] uppercase tracking-[.16em] text-royal-gold">
+                  Allocation checks
+                </p>
+                <h3 className="display-face mt-1 text-2xl">Keep the room honest</h3>
+                <ul className="mt-4 space-y-3 text-xs leading-5 text-muted-foreground">
+                  <li className="flex gap-2">
+                    <Check size={14} className="mt-0.5 shrink-0 text-royal-gold" />
+                    Nehal is the No.4–5 repair preference—not a P1-qualified batter.
+                  </li>
+                  <li className="flex gap-2">
+                    <Check size={14} className="mt-0.5 shrink-0 text-royal-gold" />
+                    Ferreira is retained. Compare any new finisher with Ferreira, Dubey and Shanaka.
+                  </li>
+                  <li className="flex gap-2">
+                    <Check size={14} className="mt-0.5 shrink-0 text-royal-gold" />
+                    Boult is new-ball first; recent IPL 2026 returns were poor and do not solve
+                    death overs.
+                  </li>
+                  <li className="flex gap-2">
+                    <Check size={14} className="mt-0.5 shrink-0 text-royal-gold" />
+                    Pathirana requires medical clearance. Hasaranga requires workload review.
+                  </li>
+                </ul>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </PageFrame>
+  );
+}
+
+function FilterControl({
+  ariaLabel,
+  value,
+  setValue,
+  options,
+}: {
+  ariaLabel: string;
+  value: string;
+  setValue: (value: string) => void;
+  options: string[];
+}) {
+  return (
+    <select
+      aria-label={ariaLabel}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      className={makeSelectClass("min-w-40 flex-1 sm:flex-none")}
+    >
+      {options.map((x) => (
+        <option key={x}>{x}</option>
+      ))}
+    </select>
+  );
+}
+function marketStatusFor(player: ReleasedPlayer) {
+  if (player.availability_status === "released_unavailable_2027_medical")
+    return "Unavailable for IPL 2027";
+  if (player.availability_status === "released_availability_unconfirmed_workload")
+    return "Availability unconfirmed";
+  if (player.availability_status === "retired_ipl_player_mentor") return "Retired / mentor";
+  return "Released · registration unverified";
+}
+function ReleasedRow({ player }: { player: ReleasedPlayer }) {
+  const status = marketStatusFor(player);
+  return (
+    <tr className="border-t border-border/60 hover:bg-accent/40">
+      <td className="whitespace-nowrap px-3 py-2 font-semibold text-foreground">
+        {player.player_name}
+      </td>
+      <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
+        {player.released_from_franchise}
+      </td>
+      <td className="px-3 py-2 text-muted-foreground">
+        {player.overseas_marked_in_pdf ? "Overseas · *" : "India"}
+      </td>
+      <td className="px-3 py-2 text-foreground">{player.salary_value_as_printed}</td>
+      <td className="px-3 py-2">
+        <span
+          className={cn(
+            "text-[10px]",
+            status.includes("Unavailable")
+              ? "text-destructive"
+              : status.includes("unconfirmed")
+                ? "text-royal-gold"
+                : "text-muted-foreground",
+          )}
+        >
+          {status}
+        </span>
+      </td>
+    </tr>
+  );
+}
+function comparisonValue(p: WatchlistPlayer, field: string) {
+  const e = p.project_evidence as Record<string, string | number | undefined>;
+  switch (field) {
+    case "Indian / overseas":
+      return p.overseas ? "Overseas" : "Indian";
+    case "Batting hand / bowling type":
+      return `${p.batting_hand ?? "Not available in supplied data"} / ${p.role}`;
+    case "Intended role":
+      return p.role_fit;
+    case "Phase expertise":
+      return p.role;
+    case "P1 rank / top-10 probability":
+      return e["p1_rank"]
+        ? `Rank ${e["p1_rank"]} · ${percent(Number(e["p1_top10_probability"]))}`
+        : "Not P1 ranked / not available in supplied data";
+    case "IPL-only role metrics":
+      return (
+        Object.entries(e)
+          .filter(([key]) => key.includes("ipl") || key.includes("death"))
+          .map(([k, v]) => `${k.replaceAll("_", " ")}: ${v}`)
+          .join(" · ") || "Not available in supplied data"
+      );
+    case "Availability / medical status":
+      return p.status;
+    case "Squad overlap":
+      return p.name === "Nehal Wadhera"
+        ? "No.4–5 repair; preferred role fit"
+        : "See role-fit note and retained group overlap";
+    case "Registration status":
+      return "Released · auction registration unverified";
+    case "Fallback":
+      return p.name === "Nehal Wadhera"
+        ? "Shubham Dubey / another verified Indian middle-order option"
+        : p.name === "Matheesha Pathirana"
+          ? "Mustafizur if medically cleared/registered; otherwise registered pace alternative"
+          : "Role-fit registered alternative";
+    default:
+      return "Not available in supplied data";
+  }
+}
+
+function IntervalBar({
+  item,
+  lower,
+  upper,
+  center,
+}: {
+  item: BatterRank | BowlerRank;
+  lower: number;
+  upper: number;
+  center: number;
+}) {
+  const min = Math.min(lower, 0);
+  const max = Math.max(upper, 0);
+  const span = max - min || 1;
+  const left = ((lower - min) / span) * 100;
+  const width = ((upper - lower) / span) * 100;
+  const dot = ((center - min) / span) * 100;
+  return (
+    <div className="mt-3">
+      <div className="mb-1 flex justify-between text-[8px] text-muted-foreground">
+        <span>90% interval</span>
+        <span>
+          {format(lower, 4)} to {format(upper, 4)}
+        </span>
+      </div>
+      <div className="interval-track">
+        <span
+          className="interval-range"
+          style={{ left: `${left}%`, width: `${Math.max(width, 2)}%` }}
+        />
+        <span className="interval-dot" style={{ left: `${dot}%` }} />
+      </div>
+      <div className="mt-1 flex justify-between font-mono text-[8px] text-muted-foreground">
+        <span>{format(lower, 4)}</span>
+        <span className="text-royal-gold">mean {format(center, 4)}</span>
+        <span>{format(upper, 4)}</span>
+      </div>
+    </div>
+  );
+}
+
+function ExposureBars({ balls, probability }: { balls: number; probability: number }) {
+  return (
+    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <div>
+        <div className="mb-1 flex justify-between text-[8px] uppercase tracking-wider text-muted-foreground">
+          <span>Gated exposure</span>
+          <span>{balls}</span>
+        </div>
+        <div className="rank-line">
+          <span style={{ width: `${Math.min(100, balls / 6)}%` }} />
+        </div>
+      </div>
+      <div>
+        <div className="mb-1 flex justify-between text-[8px] uppercase tracking-wider text-muted-foreground">
+          <span>Top-10 inclusion probability</span>
+          <span>{percent(probability)}</span>
+        </div>
+        <div className="rank-line">
+          <span style={{ width: `${probability * 100}%` }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BatterCard({ player }: { player: BatterRank }) {
+  const position =
+    player.median_batting_position === null || player.median_batting_position === undefined
+      ? "Not available in supplied data"
+      : format(player.median_batting_position, 1);
+  return (
+    <article className="data-card border-l-2 border-l-royal-pink p-4 sm:p-5">
+      <div className="flex items-start gap-3">
+        <span className="display-face min-w-10 text-4xl leading-none text-royal-gold">
+          {String(player.rank).padStart(2, "0")}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="display-face text-2xl text-foreground">{player.player_name}</h2>
+            <span className="border border-border px-2 py-1 text-[8px] uppercase tracking-wider text-muted-foreground">
+              {player.tier}
+            </span>
+          </div>
+          <p className="mt-1 text-[10px] text-royal-pink">{player.skillset}</p>
+          <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
+            {player.rr_fit_interpretation}
+          </p>
+        </div>
+      </div>
+      <IntervalBar
+        item={player}
+        lower={player.lo90_per100}
+        upper={player.hi90_per100}
+        center={player.post_mean_per100}
+      />
+      <ExposureBars balls={player.gated_balls} probability={player.p_top10} />
+      <div className="mt-4 grid grid-cols-2 gap-3 border-y border-border py-3 sm:grid-cols-4">
+        <Stat label="Pressure score / 100 gated balls" value={format(player.post_mean_per100, 4)} />
+        <Stat label="Top-10 inclusion probability" value={percent(player.p_top10)} />
+        <Stat
+          label="Gated balls · matches"
+          value={`${player.gated_balls} · ${player.gated_matches}`}
+        />
+        <Stat label="IPL share of gated exposure" value={percent(player.ipl_share_of_gated)} />
+        <Stat label="5th–95th rank range" value={`${player.rank_lo5}–${player.rank_hi95}`} />
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-[10px] sm:grid-cols-4">
+        <Stat
+          label="Deliveries · legal"
+          value={`${player.deliveries} · ${player.legal_deliveries}`}
+        />
+        <Stat label="Matches" value={player.matches} />
+        <Stat label="Observed batting position" value={position} />
+        <Stat label="Batter runs" value={player.batter_runs} />
+        <Stat label="Runs / legal delivery" value={format(player.runs_per_legal_delivery, 4)} />
+        <Stat label="Dot percentage" value={`${format(player.dot_pct, 4)}%`} />
+        <Stat
+          label="Boundaries (4s · 6s)"
+          value={`${player.fours ?? "Not available in supplied data"} · ${player.sixes ?? "Not available in supplied data"}`}
+        />
+        <Stat
+          label="Dismissals · per 100 deliveries"
+          value={`${player.dismissal_events} · ${format(player.dismissals_per_100_deliveries, 4)}`}
+        />
+      </div>
+      <div className="mt-4 grid gap-3 border-t border-border pt-3 sm:grid-cols-2">
+        <div>
+          <span className="text-[8px] uppercase tracking-wider text-royal-gold">
+            Interpretation
+          </span>
+          <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+            {player.rr_fit_interpretation}
+          </p>
+        </div>
+        <div>
+          <span className="text-[8px] uppercase tracking-wider text-royal-pink">Limitation</span>
+          <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+            {player.fit_note}. Pressure model context is not an inherent “clutch gene”; interval and
+            sample size matter.
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+function BowlerCard({ player }: { player: BowlerRank }) {
+  return (
+    <article className="data-card border-l-2 border-l-royal-gold p-4 sm:p-5">
+      <div className="flex items-start gap-3">
+        <span className="display-face min-w-10 text-4xl leading-none text-royal-gold">
+          {String(player.rank).padStart(2, "0")}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="display-face text-2xl text-foreground">{player.player_name}</h2>
+            <span className="border border-border px-2 py-1 text-[8px] uppercase tracking-wider text-muted-foreground">
+              {player.tier}
+            </span>
+          </div>
+          <p className="mt-1 text-[10px] text-royal-pink">{player.skillset}</p>
+          <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
+            {player.rr_fit_interpretation}
+          </p>
+        </div>
+      </div>
+      <IntervalBar
+        item={player}
+        lower={player.lo90_per100}
+        upper={player.hi90_per100}
+        center={player.post_mean_per100}
+      />
+      <ExposureBars balls={player.gated_balls} probability={player.p_top10} />
+      <div className="mt-4 grid grid-cols-2 gap-3 border-y border-border py-3 sm:grid-cols-4">
+        <Stat label="Pressure score / 100 gated balls" value={format(player.post_mean_per100, 4)} />
+        <Stat label="Top-10 inclusion probability" value={percent(player.p_top10)} />
+        <Stat
+          label="Gated balls · matches"
+          value={`${player.gated_balls} · ${player.gated_matches}`}
+        />
+        <Stat label="IPL share of gated exposure" value={percent(player.ipl_share_of_gated)} />
+        <Stat label="5th–95th rank range" value={`${player.rank_lo5}–${player.rank_hi95}`} />
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-[10px] sm:grid-cols-4">
+        <Stat
+          label="Deliveries · legal"
+          value={`${player.deliveries} · ${player.legal_deliveries}`}
+        />
+        <Stat label="Matches" value={player.matches} />
+        <Stat label="Runs conceded" value={player.bowler_runs_conceded} />
+        <Stat label="Runs / delivery" value={format(player.runs_per_delivery, 4)} />
+        <Stat label="Economy / 6 legal" value={format(player.economy_per_6_legal, 4)} />
+        <Stat label="Dot percentage" value={`${format(player.dot_pct, 4)}%`} />
+        <Stat label="Wickets" value={player.bowler_wickets} />
+        <Stat
+          label="Wickets / 100 deliveries"
+          value={format(player.wickets_per_100_deliveries, 4)}
+        />
+      </div>
+      <div className="mt-4 grid gap-3 border-t border-border pt-3 sm:grid-cols-2">
+        <div>
+          <span className="text-[8px] uppercase tracking-wider text-royal-gold">
+            Role interpretation
+          </span>
+          <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+            {player.rr_fit_interpretation}
+          </p>
+        </div>
+        <div>
+          <span className="text-[8px] uppercase tracking-wider text-royal-pink">Data caveat</span>
+          <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{player.fit_note}.</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+function Stat({ label, value }: { label: string; value: unknown }) {
+  return (
+    <div>
+      <span className="block text-[8px] uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <b className="mt-1 block text-xs font-semibold text-foreground">{String(value)}</b>
+    </div>
+  );
+}
+
+export function BattersPage() {
+  return (
+    <PageFrame>
+      <main>
+        <LeadIn
+          path="/batters"
+          kicker="SupeRR pressure rankings · P1 frozen order"
+          title="Pressure-ranked batters"
+          description="Exactly the supplied top 10, unchanged and in rank order. Higher score means better relative performance under the model context; it does not establish an inherent clutch gene."
+        />
+        <section className="px-5 pb-16 sm:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-5 flex flex-wrap justify-between gap-2 border-l-2 border-royal-gold bg-card/60 p-4 text-xs leading-5 text-muted-foreground">
+              <span>
+                All ten P1 ranks are shown, regardless of market status. Ranking inclusion
+                probability is not auction-selection probability.
+              </span>
+              <span className="shrink-0 text-royal-gold">10 batters · ranks 1–10</span>
+            </div>
+            <div className="grid gap-3 xl:grid-cols-2">
+              {data.pressure_ranked_batters_top10.map((p) => (
+                <BatterCard key={p.rank} player={p} />
+              ))}
+            </div>
+            <p className="mt-5 text-[10px] text-muted-foreground">
+              Observed descriptive profiles and P1 pressure exposure have different scopes.
+              Intervals and gated exposure remain visible alongside every rank.
+            </p>
+          </div>
+        </section>
+      </main>
+    </PageFrame>
+  );
+}
+
+export function BowlersPage() {
+  return (
+    <PageFrame>
+      <main>
+        <LeadIn
+          path="/bowlers"
+          kicker="SupeRR pressure rankings · P1 frozen order"
+          title="Pressure-ranked bowlers"
+          description="Exactly the supplied top 10, unchanged and in rank order. Lower / more negative scores indicate fewer runs conceded than contextual expectation."
+        />
+        <section className="px-5 pb-16 sm:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-5 border-l-2 border-royal-gold bg-card/60 p-4 text-xs leading-5 text-muted-foreground">
+              <p>
+                All ten P1 ranks are shown, regardless of market status. A top-10 inclusion
+                probability is not an auction-selection probability.
+              </p>
+              <p className="mt-2 text-royal-pink">
+                Haris Rauf and Shaheen Afridi have 0% IPL share in this pressure sample. Their
+                ranking evidence is T20I-only—not proof of IPL suitability or auction eligibility.
+              </p>
+            </div>
+            <div className="grid gap-3 xl:grid-cols-2">
+              {data.pressure_ranked_bowlers_top10.map((p) => (
+                <BowlerCard key={p.rank} player={p} />
+              ))}
+            </div>
+            <p className="mt-5 text-[10px] text-muted-foreground">
+              Pressure score represents runs conceded versus contextual expectation (wides/no-balls
+              charged; byes/leg-byes not). It is not a future-results guarantee.
+            </p>
+          </div>
+        </section>
+      </main>
+    </PageFrame>
+  );
+}
+
+export function KnockoutsPage() {
+  const cases = data.rr_analytical_notes.big_game_case_studies;
+  const details = [
+    {
+      start: "RR 130/9",
+      opponent: "GT 133/3 in 18.1",
+      context: "The 2022 final",
+      diagnostic:
+        "Batting ceiling and collapse resistance are a case study, not proof of one isolated cause.",
+    },
+    {
+      start: "RR 65/1 → 79/5",
+      opponent: "SRH 175/9 · RR 139/7",
+      context: "2024 Qualifier 2",
+      diagnostic:
+        "Middle-over spin pressure is a possible diagnostic: Shahbaz Ahmed 3/23; Abhishek Sharma 2/24. RR lost by 36 runs.",
+    },
+    {
+      start: "RR 214/6",
+      opponent: "GT 219/3 in 18.4",
+      context: "2026 Qualifier 2",
+      diagnostic:
+        "RR made 214, but GT chased it down by seven wickets. Gill 104 off 53; Sudharsan 58 off 32. Bowling response is a separate case study.",
+    },
+  ];
+  return (
+    <PageFrame>
+      <main>
+        <LeadIn
+          path="/knockouts"
+          kicker="Evidence-led case studies · not causal proof"
+          title="What is missing when the lights get brighter?"
+          description="Three knockout matches surface recruitment hypotheses. They do not prove a single repeatable weakness or establish causation."
+        />
+        <section className="px-5 pb-16 sm:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid gap-4 lg:grid-cols-3">
+              {cases.map((item, index) => (
+                <article
+                  key={item.season}
+                  className="data-card flex min-h-full flex-col border-t-2 border-t-royal-gold p-5"
+                >
+                  <span className="text-[9px] uppercase tracking-[.16em] text-royal-pink">
+                    Case study {String(index + 1).padStart(2, "0")} · {item.season}
+                  </span>
+                  <h2 className="display-face mt-2 text-2xl">{details[index]?.context}</h2>
+                  <div className="my-5 grid grid-cols-2 gap-3 border-y border-border py-4">
+                    <div>
+                      <span className="text-[8px] uppercase tracking-wider text-muted-foreground">
+                        Rajasthan Royals
+                      </span>
+                      <b className="display-face mt-1 block text-2xl text-foreground">
+                        {item.rr_score}
+                      </b>
+                    </div>
+                    <div>
+                      <span className="text-[8px] uppercase tracking-wider text-muted-foreground">
+                        Opponent
+                      </span>
+                      <b className="display-face mt-1 block text-2xl text-foreground">
+                        {item.opponent_score}
+                      </b>
+                    </div>
+                  </div>
+                  <p className="text-xs leading-5 text-muted-foreground">{item.diagnostic}</p>
+                  <p className="mt-3 border-l-2 border-royal-pink pl-3 text-xs font-semibold leading-5 text-foreground">
+                    {details[index]?.diagnostic}
+                  </p>
+                  <SourceLink
+                    href={
+                      index === 0
+                        ? data.sources.find((s) => s.name.includes("2022 Final"))?.url
+                        : index === 1
+                          ? data.sources.find((s) => s.name.includes("Qualifier 2 2024"))?.url
+                          : data.sources.find((s) => s.name.includes("Qualifier 2 2026"))?.url
+                    }
+                  >
+                    <span className="mt-auto pt-6">Match source</span>
+                  </SourceLink>
+                </article>
+              ))}
+            </div>
+            <div className="mt-12">
+              <Subhead>Recruitment hypotheses</Subhead>
+              <p className="mb-5 max-w-3xl text-sm leading-6 text-muted-foreground">
+                These are role questions suggested by the case studies—not verdicts. Each role
+                should be tested against opponent, surface, phase and current availability.
+              </p>
+              <div className="grid gap-px border border-border bg-border sm:grid-cols-2 xl:grid-cols-3">
+                {[
+                  {
+                    title: "Middle-order innings repair",
+                    body: "A left-hand No.4–5 option to navigate spin after early progress. Nehal is a role-fit hypothesis, but his 59 gated balls are below P1 eligibility.",
+                  },
+                  {
+                    title: "Powerplay threat & partnerships",
+                    body: "New-ball pressure and opening partnerships; distinguish Boult's supplied powerplay-heavy role from death execution.",
+                  },
+                  {
+                    title: "Middle-over control & wickets",
+                    body: "Spin, matchups and control through the middle. Compare retained Bishnoi, Punja, Jadeja and Siddharth before adding overseas overlap.",
+                  },
+                  {
+                    title: "High-leverage death overs",
+                    body: "Make the overs 17–20 plan explicit. Pathirana requires medical clearance; recorded yorker usage is not yorker accuracy.",
+                  },
+                  {
+                    title: "Rebuild plus finish",
+                    body: "A lower-order hitter who can contribute after a top-order collapse. Ferreira is already retained; compare marginal value with Dubey and Shanaka.",
+                  },
+                  {
+                    title: "Interpret with restraint",
+                    body: "Three matches are illustrative case studies only. Conditions, opposition, player availability and match state differ.",
+                  },
+                ].map((item) => (
+                  <div key={item.title} className="bg-card p-5">
+                    <span className="text-[9px] uppercase tracking-[.15em] text-royal-gold">
+                      Role hypothesis
+                    </span>
+                    <h3 className="display-face mt-2 text-xl">{item.title}</h3>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{item.body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </PageFrame>
+  );
+}
+
+function sourceGroup(name: string) {
+  if (/official|ipl 2025|playing conditions|retained player list/i.test(name))
+    return "Official IPL / RR / ICC sources";
+  if (/reuters/i.test(name) || name.includes("MS Dhoni")) return "Reuters reporting";
+  if (name.includes("User-uploaded")) return "User-owned project reference";
+  if (name.includes("profile") || name.includes("timeline")) return "Other secondary sources";
+  return "Official / project supporting source";
+}
+function sourceDate(name: string) {
+  if (name.includes("User-uploaded")) return "User-provided · snapshot 18 Nov 2026";
+  if (name.includes("timeline")) return "Reported schedule · snapshot 18 Nov 2026";
+  if (name.includes("MS Dhoni")) return "Reuters report · 17 Nov 2026";
+  if (name.includes("Reuters") || name.includes("Bethell"))
+    return "Reuters / ICC availability report · 18 Nov 2026 snapshot";
+  if (name.includes("Hasaranga"))
+    return "Hamstring injury report · Feb 2026; subsequent squad return · Sep 2026";
+  return "Publication date not included in supplied source register · 18 Nov 2026 snapshot";
+}
+export function MethodologyPage() {
+  const sources = data.sources;
+  const groups = [
+    "Official IPL / RR / ICC sources",
+    "Reuters reporting",
+    "Other secondary sources",
+    "User-owned project reference",
+    "Official / project supporting source",
+  ];
+  const limitations = [
+    "P1 is a context-adjusted pressure-performance estimate, not a guarantee of future results.",
+    "Reliability is modest; rankings carry uncertainty. The 90% intervals and rank ranges should be read alongside point estimates.",
+    "P2 descriptive profiles are not causal skill measures. Use only explicitly IPL-only fields for franchise decisions; other general profiles can pool IPL and T20I.",
+    "Small samples are not stable talent claims. Nehal Wadhera has 59 pressure-gated balls and is not P1-eligible.",
+    "Recorded delivery-style labels are usage labels—not proof of execution, yorker accuracy, target-zone hit rate or miss percentage.",
+    "No auction-price model, full XI optimiser or medical assessment exists. Bid ceilings are analyst-entered scenarios only.",
+    "Auction registration was not verified as of 18 November 2026. Released-player status does not imply participation.",
+    "The official retained-player PDF is a cross-franchise retained-player/salary reference, not a complete release register or final auction list.",
+  ];
+  return (
+    <PageFrame>
+      <main>
+        <LeadIn
+          path="/methodology"
+          kicker="Methodology · sources · evidence audit"
+          title="What the data says—and what it cannot"
+          description="The snapshot separates frozen pressure rankings from RR role recommendations and keeps source scope, uncertainty, release status and medical questions visible."
+        />
+        <section className="px-5 pb-16 sm:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="border-l-2 border-royal-pink bg-card/60 p-4">
+                <span className="text-[9px] uppercase tracking-wider text-royal-pink">
+                  SupeRR pressure rankings
+                </span>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                  The ten supplied P1 batter and bowler ranks, frozen in their original order. These
+                  lists are not RR auction targets.
+                </p>
+              </div>
+              <div className="border-l-2 border-royal-gold bg-card/60 p-4">
+                <span className="text-[9px] uppercase tracking-wider text-royal-gold">
+                  RR squad recommendations
+                </span>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                  Analyst role-fit hypotheses, working XIs, squad gaps and fallback logic. Not an
+                  automated auction optimiser.
+                </p>
+              </div>
+              <div className="border-l-2 border-royal-pink bg-card/60 p-4">
+                <span className="text-[9px] uppercase tracking-wider text-royal-pink">
+                  Snapshot
+                </span>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                  18 November 2026 · auction registration not verified · static user-provided
+                  project aggregates.
+                </p>
+              </div>
+            </div>
+            <section className="mt-12">
+              <Subhead>Model & scope</Subhead>
+              <div className="grid gap-7 lg:grid-cols-2">
+                <div>
+                  <h3 className="display-face text-xl">P1 · pressure-performance estimate</h3>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                    The supplied posterior mean is reported per 100 pressure-gated balls. Batter
+                    scores are better when higher. Bowler scores are better when lower/more negative
+                    because the measure represents fewer runs conceded than contextual expectation.
+                  </p>
+                  <ul className="mt-4 space-y-2 text-xs leading-5 text-muted-foreground">
+                    <li>
+                      Each top-10 inclusion probability describes model ranking uncertainty; it is
+                      not auction-selection probability.
+                    </li>
+                    <li>
+                      Gated exposure, matches, IPL share, 90% interval and 5th–95th rank range
+                      should be considered together.
+                    </li>
+                    <li>
+                      Pressure model exposure can include IPL and international T20; the IPL share
+                      is shown for scope awareness.
+                    </li>
+                    <li>
+                      Observed descriptive statistics are separate fields and do not establish
+                      causal pressure performance.
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="display-face text-xl">P2 · descriptive profiles</h3>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                    Some general profiles are pooled IPL + T20I. The target board uses fields
+                    explicitly labelled IPL-only when a franchise-specific phase comparison is
+                    shown.
+                  </p>
+                  <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                    Yorker delivery-style counts are recorded usage labels only. They do not measure
+                    accuracy, target-zone hit rate, execution rate or misses.
+                  </p>
+                  <div className="mt-4 border border-border p-4">
+                    <span className="text-[9px] uppercase tracking-wider text-royal-gold">
+                      Batter direction
+                    </span>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Higher P1 score = better relative performance under the fitted context.
+                    </p>
+                    <span className="mt-3 block text-[9px] uppercase tracking-wider text-royal-pink">
+                      Bowler direction
+                    </span>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Lower / more negative P1 score = fewer runs than contextual expectation.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section className="mt-12">
+              <Subhead>Limitations & decision boundaries</Subhead>
+              <div className="grid gap-2 md:grid-cols-2">
+                {limitations.map((text, index) => (
+                  <div key={text} className="flex gap-3 border-b border-border py-3">
+                    <span className="font-mono text-xs text-royal-gold">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <p className="text-xs leading-5 text-muted-foreground">{text}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section className="mt-12">
+              <Subhead>Availability & auction status</Subhead>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="border border-border p-5">
+                  <h3 className="display-face text-xl">Status labels</h3>
+                  <ul className="mt-3 space-y-2 text-xs leading-5 text-muted-foreground">
+                    <li>
+                      <b className="text-foreground">Retained:</b> shown as confirmed in the
+                      supplied roster snapshot.
+                    </li>
+                    <li>
+                      <b className="text-foreground">Released — registration unverified:</b> release
+                      does not prove registration, availability, medical fitness or willingness.
+                    </li>
+                    <li>
+                      <b className="text-foreground">Medical review required:</b> not a diagnosis or
+                      clearance decision.
+                    </li>
+                    <li>
+                      <b className="text-foreground">Unavailable:</b> Jacob Bethell is excluded from
+                      IPL 2027 target scenarios based on supplied ICC/RCB reporting.
+                    </li>
+                    <li>
+                      <b className="text-foreground">Availability unconfirmed:</b> Mitchell Starc's
+                      workload concerns are reported; participation is not assumed.
+                    </li>
+                  </ul>
+                </div>
+                <div className="border border-border p-5">
+                  <h3 className="display-face text-xl">Registration timeline · reported</h3>
+                  <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                    The source set reports registration closing 23 November, franchise requests
+                    through 27 November and a final list expected 3 December. These dates remain
+                    reported—not official confirmation in this snapshot. Auction date{" "}
+                    {data.auction.auction_date}, {data.auction.auction_time}, at{" "}
+                    {data.auction.venue} is listed separately as confirmed in the supplied IPL
+                    advisory.
+                  </p>
+                  <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                    The source PDF salary column unit is unspecified. The market register preserves
+                    its printed value but does not convert it, call it a base price or use it to
+                    predict bids.
+                  </p>
+                </div>
+              </div>
+            </section>
+            <section className="mt-12">
+              <Subhead>Sources & evidence register</Subhead>
+              <p className="mb-5 text-xs text-muted-foreground">
+                Sources are grouped by evidence type. Injury and availability statements link to the
+                supplied public reporting where a URL is provided; snapshot dates are labelled where
+                given.
+              </p>
+              <div className="space-y-8">
+                {groups.map((group) => (
+                  <div key={group}>
+                    <h3 className="display-face mb-3 text-xl text-royal-gold">{group}</h3>
+                    <div className="divide-y divide-border border-y border-border">
+                      {sources
+                        .filter((source) => sourceGroup(source.name) === group)
+                        .map((source) => (
+                          <article
+                            key={source.name}
+                            className="grid gap-2 py-4 sm:grid-cols-[1fr_auto]"
+                          >
+                            <div>
+                              <h4 className="text-sm font-semibold text-foreground">
+                                {source.name}
+                              </h4>
+                              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                                {source.supports}
+                              </p>
+                              <p className="mt-1 text-[9px] uppercase tracking-wider text-muted-foreground">
+                                {source.publisher ? `${source.publisher} · ` : ""}
+                                {sourceDate(source.name)}
+                              </p>
+                            </div>
+                            <SourceLink href={source.url}>
+                              <span className="text-xs">Open source</span>
+                            </SourceLink>
+                          </article>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section className="mt-12 border-t border-border pt-8">
+              <Subhead>Retained-player PDF scope</Subhead>
+              <p className="max-w-4xl text-xs leading-5 text-muted-foreground">
+                {data.retention_document_notes.document_scope}{" "}
+                {data.retention_document_notes.not_included}{" "}
+                {data.retention_document_notes.interpretation_rule}
+              </p>
+              <p className="mt-3 text-xs">
+                <SourceLink href={data.retention_document_notes.official_document_url}>
+                  {data.retention_document_notes.official_document_name}
+                </SourceLink>
+              </p>
+              <p className="mt-8 border-l-2 border-royal-pink pl-4 text-sm font-semibold text-foreground">
+                HORSES FOR COURSES. Value depends on the problem, pitch, opponent and phase—not a
+                single generic player score.
+              </p>
+            </section>
+          </div>
+        </section>
+      </main>
+    </PageFrame>
+  );
+}
