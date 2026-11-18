@@ -59,11 +59,24 @@ import {
   type PlayerBid,
 } from "@/domain/squad-rules";
 import { type AssessmentOptions } from "@/domain/market-eligibility";
+import {
+  RR_BATTER_RECOMMENDATIONS,
+  RR_BOWLER_RECOMMENDATIONS,
+  BENCHMARK_EXCLUSIONS,
+  MIDDLE_ORDER_VARIATIONS,
+  IMPACT_PLAYER_SCENARIOS,
+  PROPOSED_STARTING_XI_SCENARIOS,
+  AUCTION_SLOT_STRATEGY,
+  type RecruitmentCandidate,
+} from "@/domain/recruitment";
 
 const data = warRoomData;
 const team = data.team;
 const targetByName = new Map(data.auction_watchlist.map((player) => [player.name, player]));
 const retainedByName = new Map(data.team.retained_players.map((player) => [player.name, player]));
+const recruitmentCandidateByName = new Map<string, RecruitmentCandidate>(
+  [...RR_BATTER_RECOMMENDATIONS, ...RR_BOWLER_RECOMMENDATIONS].map((c) => [c.name, c]),
+);
 
 function format(value: number | null | undefined, digits = 2) {
   return value === null || value === undefined
@@ -1335,6 +1348,182 @@ const candidateFilters = [
   "Spin all-rounder",
   "Development prospect",
 ];
+
+const TARGETS_TABS = [
+  "RR Top 10 Batters",
+  "RR Top 10 Bowlers",
+  "Middle-Order Matrix",
+  "Impact Player Strategy",
+  "Starting XI Scenarios",
+  "P1 Benchmark Exclusions",
+  "89 Released Register",
+] as const;
+type TargetsTab = (typeof TARGETS_TABS)[number];
+
+function RecruitmentCard({ candidate }: { candidate: RecruitmentCandidate }) {
+  const pe = candidate.pressureEvidence;
+  return (
+    <article
+      className={cn(
+        "data-card flex min-h-full flex-col border-t-2 p-4",
+        candidate.rank === 1 ? "border-t-royal-gold" : "border-t-border",
+        candidate.medicalRestriction === "MEDICAL_REVIEW" && "opacity-90",
+      )}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <span className="display-face min-w-10 text-4xl leading-none text-royal-gold">
+            {String(candidate.rank).padStart(2, "0")}
+          </span>
+          <div>
+            <h3 className="display-face text-2xl leading-none text-foreground">{candidate.name}</h3>
+            <p className="mt-1 text-[9px] uppercase tracking-wider text-muted-foreground">
+              {candidate.primaryRole.replaceAll("_", " ")}
+              {candidate.secondaryRole && ` · ${candidate.secondaryRole.replaceAll("_", " ")}`}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <span className="border border-border px-2 py-1 text-[8px] uppercase text-muted-foreground">
+            {candidate.nationality === "Overseas" ? `Overseas · ${candidate.country}` : "India"}
+          </span>
+          {candidate.isProvisional && (
+            <span className="border border-royal-gold/50 bg-royal-gold/10 px-2 py-0.5 text-[7px] uppercase tracking-wider text-royal-gold">
+              Provisional sample
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Market & medical badges */}
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        <span className="border border-border px-2 py-0.5 text-[8px] text-muted-foreground">
+          {candidate.marketStatusLabel}
+        </span>
+        {candidate.medicalRestriction !== "NONE" && (
+          <span className="flex items-center gap-1 border border-destructive/50 bg-destructive/10 px-2 py-0.5 text-[8px] text-destructive">
+            <HeartPulse size={10} /> Medical review required
+          </span>
+        )}
+      </div>
+
+      {/* WHY RR? — prominent gold callout */}
+      <div className="mt-4 border-l-2 border-royal-gold bg-royal-gold/5 p-3">
+        <span className="text-[9px] font-bold uppercase tracking-[.16em] text-royal-gold">
+          Why RR?
+        </span>
+        <p className="mt-1 text-[11px] leading-5 text-foreground">{candidate.whyRR}</p>
+      </div>
+
+      {/* PRESSURE EVIDENCE */}
+      <div className="mt-3 border border-border p-3">
+        <span className="text-[9px] uppercase tracking-wider text-royal-gold">
+          Pressure evidence
+        </span>
+        <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{pe.exposureNote}</p>
+        {pe.status === "ELIGIBLE_P1_ARCHIVE" && pe.p1Rank != null && (
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div>
+              <span className="text-[8px] uppercase text-muted-foreground">P1 rank</span>
+              <b className="mt-0.5 block text-sm text-foreground">{pe.p1Rank}</b>
+            </div>
+            {pe.postMeanPer100 != null && (
+              <div>
+                <span className="text-[8px] uppercase text-muted-foreground">Score/100</span>
+                <b className="mt-0.5 block text-sm text-foreground">
+                  {format(pe.postMeanPer100, 2)}
+                </b>
+              </div>
+            )}
+            {pe.pTop10 != null && (
+              <div>
+                <span className="text-[8px] uppercase text-muted-foreground">P(top-10)</span>
+                <b className="mt-0.5 block text-sm text-foreground">{percent(pe.pTop10)}</b>
+              </div>
+            )}
+            {pe.gatedBalls != null && (
+              <div>
+                <span className="text-[8px] uppercase text-muted-foreground">Gated balls</span>
+                <b className="mt-0.5 block text-sm text-foreground">{pe.gatedBalls}</b>
+              </div>
+            )}
+            {pe.iplShareOfGated != null && (
+              <div>
+                <span className="text-[8px] uppercase text-muted-foreground">IPL share</span>
+                <b className="mt-0.5 block text-sm text-foreground">
+                  {percent(pe.iplShareOfGated)}
+                </b>
+              </div>
+            )}
+          </div>
+        )}
+        {pe.scoutingMetrics && Object.keys(pe.scoutingMetrics).length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {Object.entries(pe.scoutingMetrics).map(([label, value]) => (
+              <span
+                key={label}
+                className="border border-border px-2 py-1 text-[9px] text-muted-foreground"
+              >
+                {label
+                  .replaceAll(/([A-Z])/g, " $1")
+                  .replaceAll("_", " ")
+                  .trim()}
+                : <b className="text-foreground">{String(value)}</b>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ROLE FIT */}
+      <div className="mt-3">
+        <span className="text-[9px] uppercase tracking-wider text-royal-gold">Role fit</span>
+        <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{candidate.roleFit}</p>
+      </div>
+
+      {/* UPGRADE OVER CURRENT SQUAD */}
+      <div className="mt-3">
+        <span className="text-[9px] uppercase tracking-wider text-royal-gold">
+          Upgrade over current squad
+        </span>
+        <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+          {candidate.upgradeOverSquad}
+        </p>
+      </div>
+
+      {/* WATCH-OUT — prominent red callout, NEVER hidden */}
+      <div className="mt-3 border-l-2 border-destructive bg-destructive/5 p-3">
+        <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[.16em] text-destructive">
+          <AlertTriangle size={12} /> Watch-out
+        </span>
+        <p className="mt-1 text-[11px] leading-5 text-foreground">{candidate.watchOut}</p>
+      </div>
+
+      {/* Medical note if present */}
+      {candidate.medicalNote && (
+        <div className="mt-3 flex items-start gap-2 border border-destructive/40 bg-destructive/5 p-2.5 text-[10px] text-destructive">
+          <HeartPulse size={14} className="mt-0.5 shrink-0" />
+          {candidate.medicalNote}
+        </div>
+      )}
+
+      {/* Tactical tags */}
+      <div className="mt-auto pt-4">
+        <div className="flex flex-wrap gap-1.5">
+          {candidate.tacticalRolesSupported.map((tag) => (
+            <span
+              key={tag}
+              className="border border-border px-2 py-0.5 text-[8px] uppercase tracking-wider text-muted-foreground"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
 function getRoleFilter(player: WatchlistPlayer) {
   if (["Nehal Wadhera", "M Shahrukh Khan"].includes(player.name)) return "Indian batter";
   if (["Mangesh Yadav", "Onkar Tarmale", "Akash Madhwal"].includes(player.name))
@@ -1497,6 +1686,7 @@ function WatchCard({
 }
 
 export function TargetsPage() {
+  const [activeTab, setActiveTab] = useState<TargetsTab>("RR Top 10 Batters");
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("All roles");
   const [status, setStatus] = useState("All statuses");
@@ -1566,160 +1756,423 @@ export function TargetsPage() {
       <main>
         <LeadIn
           path="/targets"
-          kicker="Shortlist · released is not registration"
-          title="The target board"
-          description="A research shortlist—not a shopping catalogue. Compare role evidence, risk, squad overlap and the real overseas-slot cost before selecting a scenario."
+          kicker="RR recruitment room · released is not registration"
+          title="Auction recruitment board"
+          description="RR-specific pressure-informed recruitment recommendations, tactical scenarios and auction strategy. Not a copy of the global P1 benchmark."
         />
         <section className="px-5 pb-16 sm:px-8">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-5 flex flex-wrap items-center gap-2">
-              <div className="relative min-w-48 flex-1">
-                <Search
-                  size={15}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                />
-                <Input
-                  aria-label="Search target shortlist"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search player, role or team"
-                  className="pl-9"
-                />
-              </div>
-              <FilterControl
-                ariaLabel="Filter by role"
-                value={role}
-                setValue={setRole}
-                options={candidateFilters}
-              />
-              <FilterControl
-                ariaLabel="Filter by status"
-                value={status}
-                setValue={setStatus}
-                options={[
-                  "All statuses",
-                  "Released / registration unverified",
-                  "Medical review",
-                  "Availability unconfirmed",
-                  "Unavailable",
-                ]}
-              />
-              <FilterControl
-                ariaLabel="Filter by priority"
-                value={priority}
-                setValue={setPriority}
-                options={["All priorities", "Primary", "Alternative", "Developmental", "Avoid"]}
-              />
-              <FilterControl
-                ariaLabel="Filter by risk"
-                value={risk}
-                setValue={setRisk}
-                options={["All risks", "Low", "Medium", "High", "Unavailable"]}
-              />
-            </div>
-            <p className="-mt-3 mb-4 text-[9px] text-muted-foreground">
-              Priority is from the supplied shortlist. Risk filter is an editorial read of the
-              listed caveats, not a model score.
-            </p>
-            <p className="mb-4 text-[10px] uppercase tracking-wider text-muted-foreground">
-              {filteredTargets.length} researched watchlist profiles · {compared.length} / 4 in
-              comparison
-            </p>
-            {toast && (
-              <p role="status" className="mb-3 text-xs text-royal-gold">
-                {toast}
-              </p>
-            )}
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {filteredTargets.map((p) => (
-                <WatchCard
-                  key={p.name}
-                  player={p}
-                  compared={compared.includes(p.name)}
-                  onCompare={() => addCompare(p.name)}
-                />
+            {/* Tab navigation */}
+            <div className="mb-6 flex flex-wrap gap-1 border-b border-border">
+              {TARGETS_TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={cn(
+                    "border-b-2 px-3 py-2.5 text-[10px] uppercase tracking-wider transition-colors",
+                    activeTab === tab
+                      ? "border-royal-gold text-royal-gold"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {tab}
+                </button>
               ))}
             </div>
-            <section className="mt-10 border-y border-royal-gold/40 py-7">
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="text-[9px] uppercase tracking-[.16em] text-royal-pink">
-                    Awaiting official publication
-                  </p>
-                  <h2 className="display-face mt-1 text-3xl">New auction entrants</h2>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    No names added until the official registration list is supplied. Reported
-                    schedule: registration reportedly closes 23 Nov; additions through 27 Nov; final
-                    list expected 3 Dec.
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  className="rounded-sm uppercase"
-                  onClick={() =>
-                    setToast(
-                      "No official registration feed is connected. This local control does not refresh or verify the list.",
-                    )
-                  }
-                >
-                  Refresh auction list <RotateCcw size={14} />
-                </Button>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-4 text-[10px] uppercase tracking-wider text-muted-foreground">
-                <span>
-                  Auction date: {data.auction.auction_date} · {data.auction.auction_time}
-                </span>
-                <span>Venue: {data.auction.venue}</span>
-                <span>Registration timeline: reported</span>
-              </div>
-              <div className="mt-5 border border-dashed border-border px-4 py-5 text-center text-[10px] uppercase tracking-wider text-muted-foreground">
-                Waiting for official auction registration list · No entrants added
-              </div>
-            </section>
 
-            <section className="mt-14">
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="text-[9px] uppercase tracking-[.16em] text-royal-gold">
-                    Reference pool · not a recommendation list
-                  </p>
-                  <h2 className="display-face mt-1 text-3xl">89 released-player register</h2>
-                  <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">
-                    Transcribed from the user-supplied 2027 released-player reference. Release does
-                    not confirm registration, fitness, willingness to play or RR fit.
+            {/* Tab: RR Top 10 Batters */}
+            {activeTab === "RR Top 10 Batters" && (
+              <div>
+                <div className="mb-5 border-l-2 border-royal-gold bg-royal-gold/5 p-4">
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    <b className="text-foreground">
+                      RR-specific pressure-informed batter recruitment recommendations.
+                    </b>{" "}
+                    These are NOT copies of the global P1 benchmark. Each candidate is selected
+                    based on RR&apos;s actual squad vacancies, tactical needs, and pressure
+                    evidence. No candidate has verified auction registration.
                   </p>
                 </div>
-                <Button
-                  variant="outline"
-                  className="rounded-sm uppercase"
-                  onClick={() => setShowRegister(!showRegister)}
-                >
-                  {showRegister ? "Hide register" : "Search all 89 players"}
-                  <ChevronDown size={14} className={cn(showRegister && "rotate-180")} />
-                </Button>
+                <p className="mb-4 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  10 ranked batter candidates
+                </p>
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {RR_BATTER_RECOMMENDATIONS.map((c) => (
+                    <RecruitmentCard key={c.id} candidate={c} />
+                  ))}
+                </div>
               </div>
-              <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <Metric value="89" label="Reference entries" accent />
-                <Metric
-                  value={Object.keys(data.released_player_reference.franchise_counts).length}
-                  label="Franchises"
-                />
-                <Metric value="TBD" label="New entrants" />
-                <Metric value="18 Nov 2026" label="Snapshot date" />
+            )}
+
+            {/* Tab: RR Top 10 Bowlers */}
+            {activeTab === "RR Top 10 Bowlers" && (
+              <div>
+                <div className="mb-5 border-l-2 border-royal-gold bg-royal-gold/5 p-4">
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    <b className="text-foreground">
+                      RR-specific pressure-informed bowler recruitment recommendations.
+                    </b>{" "}
+                    Distinct from the global P1 bowler benchmark. Death-overs and Indian pace depth
+                    are priority roles dictated by RR&apos;s 2024/2026 playoff diagnostics.
+                  </p>
+                </div>
+                <p className="mb-4 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  10 ranked bowler candidates
+                </p>
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {RR_BOWLER_RECOMMENDATIONS.map((c) => (
+                    <RecruitmentCard key={c.id} candidate={c} />
+                  ))}
+                </div>
               </div>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {Object.entries(data.released_player_reference.franchise_counts).map(
-                  ([name, count]) => (
-                    <span
-                      key={name}
-                      className="border border-border px-2 py-1 text-[9px] text-muted-foreground"
+            )}
+
+            {/* Tab: Middle-Order Matrix */}
+            {activeTab === "Middle-Order Matrix" && (
+              <div>
+                <div className="mb-5 border-l-2 border-royal-gold bg-royal-gold/5 p-4">
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    <b className="text-foreground">Three tactical middle-order variations</b> for
+                    slots 4–8, each tailored to a specific match situation. These use hypothetical
+                    acquisitions alongside retained players.
+                  </p>
+                </div>
+                <div className="grid gap-5 lg:grid-cols-3">
+                  {MIDDLE_ORDER_VARIATIONS.map((variation) => (
+                    <article
+                      key={variation.id}
+                      className="data-card flex min-h-full flex-col border-t-2 border-t-royal-gold p-5"
                     >
-                      {name}: <b className="text-foreground">{count}</b>
-                    </span>
-                  ),
-                )}
+                      <span className="text-[9px] uppercase tracking-[.16em] text-royal-gold">
+                        {variation.id.toUpperCase()}
+                      </span>
+                      <h3 className="display-face mt-2 text-xl">{variation.title}</h3>
+                      <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+                        {variation.context}
+                      </p>
+                      <div className="mt-4 space-y-2">
+                        {variation.battingOrderSlots4to8.map((slot) => (
+                          <div
+                            key={slot.slotNumber}
+                            className="flex items-start gap-3 border-b border-border/60 pb-2"
+                          >
+                            <span className="display-face min-w-6 text-lg text-royal-gold">
+                              {slot.slotNumber}
+                            </span>
+                            <div>
+                              <p className="text-xs font-semibold text-foreground">{slot.player}</p>
+                              <p className="text-[9px] text-royal-pink">{slot.role}</p>
+                              <p className="mt-0.5 text-[9px] text-muted-foreground">
+                                {slot.matchupRationale}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-auto pt-4">
+                        <div className="border-l-2 border-royal-gold pl-3">
+                          <span className="text-[8px] uppercase tracking-wider text-royal-gold">
+                            Key advantage
+                          </span>
+                          <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+                            {variation.keyTacticalAdvantage}
+                          </p>
+                        </div>
+                        <div className="mt-2 border-l-2 border-destructive pl-3">
+                          <span className="text-[8px] uppercase tracking-wider text-destructive">
+                            Trade-off
+                          </span>
+                          <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+                            {variation.tradeOff}
+                          </p>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
               </div>
-              {showRegister && (
+            )}
+
+            {/* Tab: Impact Player Strategy */}
+            {activeTab === "Impact Player Strategy" && (
+              <div>
+                <div className="mb-5 border-l-2 border-royal-gold bg-royal-gold/5 p-4">
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    <b className="text-foreground">Six Impact Player substitution scenarios</b>{" "}
+                    covering batting-first, chasing, defending, powerplay, death and spin-friendly
+                    surfaces.
+                  </p>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                  {IMPACT_PLAYER_SCENARIOS.map((scenario) => (
+                    <article
+                      key={scenario.id}
+                      className="data-card flex min-h-full flex-col border-t-2 border-t-border p-5"
+                    >
+                      <span className="text-[9px] uppercase tracking-[.16em] text-royal-gold">
+                        Scenario {scenario.id.replace("impact-", "").toUpperCase()}
+                      </span>
+                      <h3 className="display-face mt-2 text-xl">{scenario.scenarioName}</h3>
+                      <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+                        {scenario.matchContext}
+                      </p>
+                      <div className="mt-4 grid grid-cols-2 gap-3 border-y border-border py-3">
+                        <div>
+                          <span className="text-[8px] uppercase text-muted-foreground">
+                            Impact player
+                          </span>
+                          <b className="mt-0.5 block text-xs text-foreground">
+                            {scenario.recommendedPlayer}
+                          </b>
+                          <span className="text-[8px] text-royal-pink">{scenario.playerRole}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] uppercase text-muted-foreground">
+                            Substituted out
+                          </span>
+                          <b className="mt-0.5 block text-xs text-foreground">
+                            {scenario.substitutedStartingPlayer}
+                          </b>
+                        </div>
+                      </div>
+                      <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
+                        <b className="text-foreground">Why:</b> {scenario.whyThisSubstitution}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        <span className="border border-border px-2 py-0.5 text-[8px] text-muted-foreground">
+                          Overseas in XI: {scenario.overseasCountInXI}/4
+                        </span>
+                        <span className="border border-border px-2 py-0.5 text-[8px] text-muted-foreground">
+                          {scenario.squadEligibility}
+                        </span>
+                      </div>
+                      {scenario.medicalRestrictions !== "None" && (
+                        <div className="mt-2 flex items-start gap-2 border border-destructive/40 bg-destructive/5 p-2 text-[9px] text-destructive">
+                          <HeartPulse size={12} className="mt-0.5 shrink-0" />
+                          {scenario.medicalRestrictions}
+                        </div>
+                      )}
+                      <div className="mt-auto border-l-2 border-destructive pl-3 pt-3">
+                        <span className="flex items-center gap-1 text-[8px] uppercase tracking-wider text-destructive">
+                          <AlertTriangle size={10} /> Downside
+                        </span>
+                        <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+                          {scenario.mainDownside}
+                        </p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tab: Starting XI Scenarios */}
+            {activeTab === "Starting XI Scenarios" && (
+              <div>
+                <div className="mb-5 border-l-2 border-royal-gold bg-royal-gold/5 p-4">
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    <b className="text-foreground">Five tactical Starting XI scenarios</b> using
+                    retained players and hypothetical acquisitions. Hypothetical additions are
+                    clearly marked.
+                  </p>
+                </div>
+                <div className="space-y-6">
+                  {PROPOSED_STARTING_XI_SCENARIOS.map((scenario) => (
+                    <article
+                      key={scenario.id}
+                      className="data-card border-t-2 border-t-royal-gold p-5"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <span className="text-[9px] uppercase tracking-[.16em] text-royal-gold">
+                            Scenario {scenario.id.replace("tactical-scen-", "")}
+                          </span>
+                          <h3 className="display-face mt-1 text-2xl">{scenario.title}</h3>
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            {scenario.purpose}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className="border border-border px-2 py-1 text-[8px] uppercase text-muted-foreground">
+                            Overseas: {scenario.overseasCount}/4
+                          </span>
+                          <span className="border border-border px-2 py-1 text-[8px] uppercase text-muted-foreground">
+                            Pace: {scenario.paceOptionsCount} · Spin: {scenario.spinOptionsCount}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Starting XI grid */}
+                      <div className="mt-4 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {scenario.startingXI.map((player, idx) => {
+                          const isHypothetical =
+                            scenario.actualVsHypothetical.hypotheticalAdditions.includes(player);
+                          return (
+                            <div
+                              key={player}
+                              className={cn(
+                                "flex items-center gap-2 border px-3 py-2 text-xs",
+                                isHypothetical
+                                  ? "border-royal-gold/50 bg-royal-gold/5"
+                                  : "border-border",
+                              )}
+                            >
+                              <span className="font-mono text-[9px] text-muted-foreground">
+                                {String(idx + 1).padStart(2, "0")}
+                              </span>
+                              <span className="font-semibold text-foreground">{player}</span>
+                              {isHypothetical && (
+                                <span className="ml-auto text-[7px] uppercase text-royal-gold">
+                                  Hypothetical
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {/* Death specialists */}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="text-[8px] uppercase text-muted-foreground">
+                          Death specialists:
+                        </span>
+                        {scenario.deathOversSpecialists.map((name) => (
+                          <span
+                            key={name}
+                            className="border border-royal-pink/40 px-2 py-0.5 text-[8px] text-royal-pink"
+                          >
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                      {/* Bench displacement & actual vs hypothetical */}
+                      <div className="mt-4 grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+                        <div>
+                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground">
+                            Bench displaced
+                          </span>
+                          <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+                            {scenario.benchDisplacement.displacedRetained.join(", ")}
+                          </p>
+                          <p className="mt-1 text-[9px] text-royal-gold">
+                            {scenario.benchDisplacement.startingRetainedCount} retained +{" "}
+                            {scenario.benchDisplacement.startingAdditionsCount} hypothetical
+                            addition(s)
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground">
+                            Impact player alternatives
+                          </span>
+                          <ul className="mt-1 space-y-1">
+                            {scenario.impactPlayerAlternatives.map((alt) => (
+                              <li key={alt} className="text-[10px] leading-4 text-muted-foreground">
+                                {alt}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tab: P1 Benchmark Exclusions */}
+            {activeTab === "P1 Benchmark Exclusions" && (
+              <div>
+                <div className="mb-5 border-l-2 border-royal-pink bg-destructive/5 p-4">
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    <b className="text-foreground">
+                      Why global P1 leaders cannot occupy RR auction recruitment spots.
+                    </b>{" "}
+                    These {BENCHMARK_EXCLUSIONS.length} players appear in the historical P1 pressure
+                    benchmark but are retained by other franchises, retired, legally unavailable, or
+                    explicitly excluded.
+                  </p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[700px] border-collapse text-left text-xs">
+                    <thead className="bg-secondary text-[9px] uppercase tracking-wider text-muted-foreground">
+                      <tr>
+                        {[
+                          "Player",
+                          "P1 Rank",
+                          "Discipline",
+                          "Current Status",
+                          "Exclusion Reason",
+                          "Pressure Score/100",
+                        ].map((col) => (
+                          <th key={col} className="px-3 py-3 font-semibold">
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {BENCHMARK_EXCLUSIONS.map((exc) => (
+                        <tr key={exc.name} className="border-t border-border/60 hover:bg-accent/40">
+                          <td className="whitespace-nowrap px-3 py-2 font-semibold text-foreground">
+                            {exc.name}
+                          </td>
+                          <td className="px-3 py-2 text-muted-foreground">
+                            {exc.globalP1Rank === 999 ? "N/A" : exc.globalP1Rank}
+                          </td>
+                          <td className="px-3 py-2 text-muted-foreground">{exc.discipline}</td>
+                          <td className="px-3 py-2 text-muted-foreground">
+                            {exc.currentFranchiseOrStatus}
+                          </td>
+                          <td className="max-w-sm px-3 py-2 text-muted-foreground">
+                            {exc.exclusionReason}
+                          </td>
+                          <td className="px-3 py-2 text-foreground">
+                            {exc.pressureScorePer100 === 0
+                              ? "N/A"
+                              : format(exc.pressureScorePer100, 2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: 89 Released Register */}
+            {activeTab === "89 Released Register" && (
+              <div>
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                  <div>
+                    <p className="text-[9px] uppercase tracking-[.16em] text-royal-gold">
+                      Reference pool · not a recommendation list
+                    </p>
+                    <h2 className="display-face mt-1 text-3xl">89 released-player register</h2>
+                    <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">
+                      Transcribed from the user-supplied 2027 released-player reference. Release
+                      does not confirm registration, fitness, willingness to play or RR fit.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                  <Metric value="89" label="Reference entries" accent />
+                  <Metric
+                    value={Object.keys(data.released_player_reference.franchise_counts).length}
+                    label="Franchises"
+                  />
+                  <Metric value="TBD" label="New entrants" />
+                  <Metric value="18 Nov 2026" label="Snapshot date" />
+                </div>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {Object.entries(data.released_player_reference.franchise_counts).map(
+                    ([name, count]) => (
+                      <span
+                        key={name}
+                        className="border border-border px-2 py-1 text-[9px] text-muted-foreground"
+                      >
+                        {name}: <b className="text-foreground">{count}</b>
+                      </span>
+                    ),
+                  )}
+                </div>
                 <div className="mt-5 border border-border">
                   <div className="grid gap-2 border-b border-border p-3 sm:grid-cols-[1fr_220px_220px]">
                     <div className="relative">
@@ -1786,9 +2239,158 @@ export function TargetsPage() {
                     </table>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
+
+            {/* Auction Slot Strategy Ladder (always visible below tabs) */}
+            <section className="mt-14 border-t border-border pt-8">
+              <Subhead>
+                Auction capacity &amp; slot strategy{" "}
+                <span className="ml-2 font-sans text-xs text-muted-foreground">
+                  6 priority levels
+                </span>
+              </Subhead>
+              <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+                {AUCTION_SLOT_STRATEGY.map((slot) => (
+                  <div key={slot.priority} className="border border-border p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="display-face text-2xl text-royal-gold">
+                        P{slot.priority}
+                      </span>
+                      <span className="text-xs font-semibold text-foreground">
+                        {slot.targetArea}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-[10px] text-muted-foreground">
+                      <b className="text-foreground">Ideal:</b> {slot.idealCandidate}
+                    </p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      <b className="text-foreground">Fallbacks:</b> {slot.fallbacks.join(", ")}
+                    </p>
+                    <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+                      {slot.rationality}
+                    </p>
+                    <p className="mt-1 text-[9px] text-royal-pink">
+                      {slot.overseasOpportunityCost}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </section>
 
+            {/* Existing legacy shortlist watchcards (preserved) */}
+            <section className="mt-14 border-t border-border pt-8">
+              <Subhead>
+                Legacy watchlist profiles{" "}
+                <span className="ml-2 font-sans text-xs text-muted-foreground">
+                  {filteredTargets.length} profiles · {compared.length} / 4 in comparison
+                </span>
+              </Subhead>
+              <p className="mb-4 text-[10px] text-muted-foreground">
+                Original research shortlist from the supplied watchlist data. For RR-specific ranked
+                recruitment recommendations, use the tabs above.
+              </p>
+              <div className="mb-5 flex flex-wrap items-center gap-2">
+                <div className="relative min-w-48 flex-1">
+                  <Search
+                    size={15}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  />
+                  <Input
+                    aria-label="Search target shortlist"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search player, role or team"
+                    className="pl-9"
+                  />
+                </div>
+                <FilterControl
+                  ariaLabel="Filter by role"
+                  value={role}
+                  setValue={setRole}
+                  options={candidateFilters}
+                />
+                <FilterControl
+                  ariaLabel="Filter by status"
+                  value={status}
+                  setValue={setStatus}
+                  options={[
+                    "All statuses",
+                    "Released / registration unverified",
+                    "Medical review",
+                    "Availability unconfirmed",
+                    "Unavailable",
+                  ]}
+                />
+                <FilterControl
+                  ariaLabel="Filter by priority"
+                  value={priority}
+                  setValue={setPriority}
+                  options={["All priorities", "Primary", "Alternative", "Developmental", "Avoid"]}
+                />
+                <FilterControl
+                  ariaLabel="Filter by risk"
+                  value={risk}
+                  setValue={setRisk}
+                  options={["All risks", "Low", "Medium", "High", "Unavailable"]}
+                />
+              </div>
+              {toast && (
+                <p role="status" className="mb-3 text-xs text-royal-gold">
+                  {toast}
+                </p>
+              )}
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {filteredTargets.map((p) => (
+                  <WatchCard
+                    key={p.name}
+                    player={p}
+                    compared={compared.includes(p.name)}
+                    onCompare={() => addCompare(p.name)}
+                  />
+                ))}
+              </div>
+            </section>
+
+            {/* New auction entrants */}
+            <section className="mt-10 border-y border-royal-gold/40 py-7">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="text-[9px] uppercase tracking-[.16em] text-royal-pink">
+                    Awaiting official publication
+                  </p>
+                  <h2 className="display-face mt-1 text-3xl">New auction entrants</h2>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    No names added until the official registration list is supplied. Reported
+                    schedule: registration reportedly closes 23 Nov; additions through 27 Nov; final
+                    list expected 3 Dec.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="rounded-sm uppercase"
+                  onClick={() =>
+                    setToast(
+                      "No official registration feed is connected. This local control does not refresh or verify the list.",
+                    )
+                  }
+                >
+                  Refresh auction list <RotateCcw size={14} />
+                </Button>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-4 text-[10px] uppercase tracking-wider text-muted-foreground">
+                <span>
+                  Auction date: {data.auction.auction_date} · {data.auction.auction_time}
+                </span>
+                <span>Venue: {data.auction.venue}</span>
+                <span>Registration timeline: reported</span>
+              </div>
+              <div className="mt-5 border border-dashed border-border px-4 py-5 text-center text-[10px] uppercase tracking-wider text-muted-foreground">
+                Waiting for official auction registration list · No entrants added
+              </div>
+            </section>
+
+            {/* Compare tray */}
             <section className="mt-14 border-t border-border pt-8">
               <Subhead>
                 Compare tray{" "}
@@ -1857,6 +2459,7 @@ export function TargetsPage() {
               )}
             </section>
 
+            {/* Auction value scenario */}
             <section className="mt-14 grid gap-8 border-t border-border pt-9 lg:grid-cols-[1fr_1fr]">
               <div>
                 <p className="text-[9px] uppercase tracking-[.16em] text-royal-pink">
@@ -2355,6 +2958,29 @@ export function BattersPage() {
         />
         <section className="px-5 pb-16 sm:px-8">
           <div className="mx-auto max-w-7xl">
+            {/* Prominent Recruitment Warning Banner */}
+            <div className="mb-5 border-l-4 border-royal-pink bg-royal-pink/10 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-royal-pink">
+                    Historical P1 Benchmark · NOT RR Recruitment Recommendations
+                  </span>
+                  <p className="mt-1 text-xs leading-5 text-foreground">
+                    This page displays the frozen historical P1 model benchmark. Most players listed
+                    here (e.g. Tim David, Yashasvi Jaiswal, Suryakumar Yadav, Nicholas Pooran) are
+                    already retained by their respective franchises and are{" "}
+                    <b>legally unavailable for auction recruitment</b>.
+                  </p>
+                </div>
+                <Link
+                  to="/targets"
+                  className="shrink-0 border border-royal-gold bg-royal-gold px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-royal-dark hover:bg-royal-gold/90"
+                >
+                  View RR Target Board →
+                </Link>
+              </div>
+            </div>
+
             <div className="mb-5 flex flex-wrap justify-between gap-2 border-l-2 border-royal-gold bg-card/60 p-4 text-xs leading-5 text-muted-foreground">
               <span>
                 All ten P1 ranks are shown, regardless of market status. Ranking inclusion
@@ -2390,6 +3016,30 @@ export function BowlersPage() {
         />
         <section className="px-5 pb-16 sm:px-8">
           <div className="mx-auto max-w-7xl">
+            {/* Prominent Recruitment Warning Banner */}
+            <div className="mb-5 border-l-4 border-royal-pink bg-royal-pink/10 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-royal-pink">
+                    Historical P1 Benchmark · NOT RR Recruitment Recommendations
+                  </span>
+                  <p className="mt-1 text-xs leading-5 text-foreground">
+                    This page displays the frozen historical P1 bowler benchmark. Leaders such as
+                    Jasprit Bumrah, Sunil Narine, and Lungi Ngidi are already retained; Haris Rauf
+                    and Shaheen Afridi have 0% IPL exposure and are not participating. For
+                    actionable targets like Matheesha Pathirana, Trent Boult, and Avesh Khan,
+                    consult RR&apos;s recruitment board.
+                  </p>
+                </div>
+                <Link
+                  to="/targets"
+                  className="shrink-0 border border-royal-gold bg-royal-gold px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-royal-dark hover:bg-royal-gold/90"
+                >
+                  View RR Target Board →
+                </Link>
+              </div>
+            </div>
+
             <div className="mb-5 border-l-2 border-royal-gold bg-card/60 p-4 text-xs leading-5 text-muted-foreground">
               <p>
                 All ten P1 ranks are shown, regardless of market status. A top-10 inclusion
