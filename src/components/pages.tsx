@@ -37,6 +37,28 @@ import {
 } from "@/data/war-room";
 import stadiumImage from "@/assets/jaipur-stadium.jpg";
 import { cn } from "@/lib/utils";
+import {
+  NORMALIZED_SCENARIOS,
+  getNormalizedScenario,
+  baseXI,
+  type NormalizedScenario,
+} from "@/domain/scenarios";
+import {
+  validateSquad,
+  validatePlayingXI,
+  calculateBenchDisplacement,
+  calculatePurse,
+  cleanPlayerName,
+  resolvePlayerDetails,
+  classifyCandidateAcquisition,
+  MAX_SQUAD_SIZE,
+  MAX_OVERSEAS_SQUAD,
+  MAX_OVERSEAS_PLAYING_XI,
+  INITIAL_PURSE_CRORE,
+  PLAYING_XI_SIZE,
+  type PlayerBid,
+} from "@/domain/squad-rules";
+import { type AssessmentOptions } from "@/domain/market-eligibility";
 
 const data = warRoomData;
 const team = data.team;
@@ -337,390 +359,300 @@ export function HomePage() {
   );
 }
 
-type Scenario = {
-  id: string;
-  title: string;
-  purpose: string;
-  xi: string[];
-  why: string;
-  trade: string;
-  newBall: string;
-  middle: string;
-  death: string;
-  batImpact: string;
-  bowlImpact: string;
-  fallback: string;
-};
-const baseXI = [
-  "Vaibhav Sooryavanshi",
-  "Yashasvi Jaiswal",
-  "Riyan Parag",
-  "Dhruv Jurel",
-  "Shubham Dubey",
-  "Donovan Ferreira",
-  "Ravindra Jadeja",
-  "Ravi Bishnoi",
-  "Jofra Archer",
-  "Mohammed Shami",
-  "Nandre Burger",
-];
-const scenarios: Scenario[] = [
-  {
-    id: "balanced",
-    title: "Core balance · Archer + Shami",
-    purpose: "Core balance / Archer + Shami",
-    xi: baseXI,
-    why: "Archer leads the pace group; Shami adds an Indian new-ball option. Burger's left-arm angle is available when the matchup warrants it. Bishnoi provides the wrist-spin choice.",
-    trade:
-      "Three overseas starters. Nehal is a target, not retained; keep Shubham at No.5 unless a signing is made. Sandeep, Siddharth and Punja stay available by conditions.",
-    newBall: "Archer + Shami; Burger can rotate in",
-    middle: "Bishnoi, Jadeja; Punja / Siddharth by matchup",
-    death:
-      "Role plan around Archer, with Sandeep as a phase-control option; no yorker accuracy claim",
-    batImpact: "Batter from retained bench if chasing",
-    bowlImpact: "Sandeep or Siddharth by surface",
-    fallback:
-      "If Nehal is not signed, retain Shubham Dubey or select another verified Indian No.4–6 option.",
-  },
-  {
-    id: "boult",
-    title: "New-ball squeeze · Boult",
-    purpose: "Jaipur / new-ball swing",
-    xi: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Riyan Parag",
-      "Dhruv Jurel",
-      "Shubham Dubey",
-      "Donovan Ferreira",
-      "Dasun Shanaka",
-      "Ravi Bishnoi",
-      "Jofra Archer",
-      "Trent Boult",
-      "Mohammed Shami",
-    ],
-    why: "Archer + Boult attack with the new ball; Shami supports the Indian seam group. Boult's supplied role readout is powerplay-heavy (61.2%); death share is 17.3%.",
-    trade:
-      "Ferreira + Archer + Boult + Shanaka use all four overseas XI places; Burger is benched. Shanaka is included only for his all-round contribution. Boult had 2 wickets at 11.63 economy in IPL 2026 and is not the death solution.",
-    newBall: "Archer + Boult + Shami",
-    middle: "Bishnoi + Jadeja; Shanaka only if his all-round role earns the slot",
-    death:
-      "Plan Archer / Sandeep or a separately registered death option; execution metrics not supplied",
-    batImpact: "Retained batting option",
-    bowlImpact: "Sandeep Sharma",
-    fallback:
-      "If Boult is not registered or role/value does not fit, keep a distinct death-specific plan; do not substitute an assumed role.",
-  },
-  {
-    id: "death",
-    title: "Dedicated death attack · Pathirana gate",
-    purpose: "Death-strike attack",
-    xi: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Riyan Parag",
-      "Dhruv Jurel",
-      "Shubham Dubey",
-      "Donovan Ferreira",
-      "Ravindra Jadeja",
-      "Ravi Bishnoi",
-      "Jofra Archer",
-      "Matheesha Pathirana",
-      "Nandre Burger",
-    ],
-    why: "Archer and Pathirana form the proposed overseas pace pair; Ferreira remains the third overseas player. Nandre Burger can be the optional fourth overseas role; if that adds no value, keep the slot unused and choose Indian seam depth.",
-    trade:
-      "Pathirana remains excluded until medical clearance is explicitly switched on here. This is a scenario gate, not medical evidence or confirmation of auction registration. Shami / Sandeep rotate in for an Indian control role.",
-    newBall: "Archer + Shami or Burger",
-    middle: "Bishnoi + Jadeja",
-    death: "Pathirana only after medical clearance; no clearance is asserted",
-    batImpact: "Retained batting option",
-    bowlImpact: "Sandeep Sharma",
-    fallback:
-      "If Pathirana fails medical clearance: Mustafizur only if cleared and registered, otherwise another registered pace alternative.",
-  },
-  {
-    id: "mustafizur",
-    title: "Left-arm variation · Mustafizur",
-    purpose: "Left-arm variation / Mustafizur",
-    xi: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Riyan Parag",
-      "Dhruv Jurel",
-      "Shubham Dubey",
-      "Donovan Ferreira",
-      "Ravindra Jadeja",
-      "Ravi Bishnoi",
-      "Jofra Archer",
-      "Mustafizur Rahman",
-      "Nandre Burger",
-    ],
-    why: "Three overseas options plus Ferreira give variation across phases; Mustafizur supplies cutters/left-arm pace while Burger offers another angle.",
-    trade:
-      "Mustafizur is not statistically equivalent to Pathirana: supplied IPL-only death economy 10.28 versus 8.80, with different sample sizes. Registration and current medical status remain unverified.",
-    newBall: "Archer + Burger; Shami as Indian alternative",
-    middle: "Bishnoi + Jadeja",
-    death: "Mustafizur phase option; medical review required",
-    batImpact: "Shubham / retained batter",
-    bowlImpact: "Shami or Sandeep",
-    fallback:
-      "Use only if Mustafizur is registered and medically cleared; otherwise choose a registered pace alternative.",
-  },
-  {
-    id: "spin",
-    title: "Slow pitch · middle-over choke",
-    purpose: "Slow / turning surface",
-    xi: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Riyan Parag",
-      "Dhruv Jurel",
-      "Shubham Dubey",
-      "Donovan Ferreira",
-      "Ravindra Jadeja",
-      "Ravi Bishnoi",
-      "Manimaran Siddharth",
-      "Jofra Archer",
-      "Mohammed Shami",
-    ],
-    why: "Jadeja + Bishnoi + Siddharth add three Indian spin options, with pace selected around Archer and Shami.",
-    trade:
-      "No forced overseas spin purchase. Hasaranga stays conditional on medical/workload review and showing value beyond Bishnoi, Punja, Jadeja and Siddharth.",
-    newBall: "Archer + Shami",
-    middle: "Jadeja + Bishnoi + Siddharth; Punja alternative",
-    death: "Retained pace roles; exact role depends on match plan",
-    batImpact: "Retained batter",
-    bowlImpact: "Yash Raj Punja / spin option",
-    fallback:
-      "Use existing Indian spin depth if Hasaranga's review or role comparison does not pass.",
-  },
-  {
-    id: "repair",
-    title: "Batting collapse · innings repair",
-    purpose: "Batting collapse / innings repair",
-    xi: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Riyan Parag",
-      "Dhruv Jurel",
-      "Nehal Wadhera",
-      "Donovan Ferreira",
-      "Ravindra Jadeja",
-      "Ravi Bishnoi",
-      "Jofra Archer",
-      "Mohammed Shami",
-      "Nandre Burger",
-    ],
-    why: "The top four stay intact; a left-hand No.5 repair option sits before retained lower-order hitter Ferreira and Jadeja.",
-    trade:
-      "Nehal is preferred for a No.4–5 innings-repair vacancy, but his 59 pressure-gated balls are below P1 eligibility. Shahrukh is a different No.6–7 power profile, not the preferred repair role.",
-    newBall: "Archer + Shami",
-    middle: "Bishnoi + Jadeja",
-    death: "Archer / Sandeep by phase plan",
-    batImpact: "Retained hitter / wicketkeeper option",
-    bowlImpact: "Sandeep Sharma",
-    fallback:
-      "If Nehal is not acquired, use retained Shubham Dubey or a verified Indian No.4–6 role-fit player.",
-  },
-  {
-    id: "overseas",
-    title: "Four-overseas alternative",
-    purpose: "Overseas-lean alternative",
-    xi: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Riyan Parag",
-      "Dhruv Jurel",
-      "Shubham Dubey",
-      "Donovan Ferreira",
-      "Ravindra Jadeja",
-      "Ravi Bishnoi",
-      "Jofra Archer",
-      "Nandre Burger",
-      "Dasun Shanaka",
-    ],
-    why: "Ferreira + Archer + Burger + Shanaka use four overseas XI places; Shanaka earns selection only when his all-round role contributes.",
-    trade:
-      "Four overseas slots are full. Adding Boult or Pathirana means Burger, Shanaka or another overseas player must leave. Three overseas is also a valid choice.",
-    newBall: "Archer + Burger + Shami from Indian options",
-    middle: "Bishnoi + Jadeja / Siddharth",
-    death: "Archer with Indian phase support; no execution forecast",
-    batImpact: "Indian retained batting option",
-    bowlImpact: "Sandeep / Siddharth / Shami",
-    fallback:
-      "If a second overseas strike bowler enters, bench Burger or Shanaka based on the role—not overseas quota.",
-  },
-  {
-    id: "highscore",
-    title: "Chase / high-scoring surface",
-    purpose: "Chasing / high-scoring surface",
-    xi: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Riyan Parag",
-      "Dhruv Jurel",
-      "Shubham Dubey",
-      "Donovan Ferreira",
-      "Dasun Shanaka",
-      "Ravi Bishnoi",
-      "Jofra Archer",
-      "Mohammed Shami",
-      "Sandeep Sharma",
-    ],
-    why: "Keep retained power hitters and choose a bowling group explicitly; three overseas starters leave one XI overseas place unused.",
-    trade:
-      "Dropping an extra specialist bowler reduces bowling coverage. The trade is shown rather than hidden; Shanaka is role-selected, not quota-selected.",
-    newBall: "Archer + Shami",
-    middle: "Bishnoi + Parag option",
-    death: "Archer / Sandeep roles; choose phase cover before prioritising another hitter",
-    batImpact: "Top-order collapse: retained stabilising option",
-    bowlImpact: "Extra seam option if defending",
-    fallback: "Restore a specialist bowler if the pitch or opposition increases bowling demand.",
-  },
-];
-
 function makeSelectClass(extra = "") {
   return `control ${extra}`;
 }
+
 export function SquadPage() {
-  const [active, setActive] = useState("balanced");
-  const [pathiranaCleared, setPathiranaCleared] = useState(false);
-  const [mustafizurCleared, setMustafizurCleared] = useState(false);
-  const [hasarangaCleared, setHasarangaCleared] = useState(false);
-  const [lineup, setLineup] = useState<string[]>(baseXI);
-  const [impactSituation, setImpactSituation] = useState("Batting first");
-  const [impactPlayer, setImpactPlayer] = useState("Sandeep Sharma");
-  const [message, setMessage] = useState("");
-  const scenario = scenarios.find((item) => item.id === active) ?? scenarios[0]!;
-  const selected =
-    active === "custom"
-      ? lineup
-      : scenario.xi.map((name) =>
-          (name === "Matheesha Pathirana" && !pathiranaCleared) ||
-          (name === "Mustafizur Rahman" && !mustafizurCleared) ||
-          (name === "Wanindu Hasaranga" && !hasarangaCleared)
-            ? "Sushant Mishra"
-            : name,
+  const [activeScenarioId, setActiveScenarioId] = useState<string>("balanced");
+  const [pathiranaCleared, setPathiranaCleared] = useState<boolean>(false);
+  const [mustafizurCleared, setMustafizurCleared] = useState<boolean>(false);
+  const [hasarangaCleared, setHasarangaCleared] = useState<boolean>(false);
+  const [customLineup, setCustomLineup] = useState<string[]>(baseXI);
+  const [impactSituation, setImpactSituation] = useState<string>("Batting first");
+  const [impactPlayer, setImpactPlayer] = useState<string>("Sandeep Sharma");
+  const [userMessage, setUserMessage] = useState<string>("");
+  const [scenarioBids, setScenarioBids] = useState<Record<string, number>>({});
+
+  const activeScenario =
+    NORMALIZED_SCENARIOS.find((item) => item.id === activeScenarioId) ?? NORMALIZED_SCENARIOS[0]!;
+
+  const assessmentOptions: AssessmentOptions = {
+    analystClearedMedical: pathiranaCleared || mustafizurCleared,
+    analystWorkloadAssumed: hasarangaCleared,
+  };
+
+  // Determine current starting XI
+  const selectedXI =
+    activeScenarioId === "custom"
+      ? customLineup
+      : activeScenario.startingXI.map((name) => {
+          if (name === "Matheesha Pathirana" && !pathiranaCleared) return "Sushant Mishra";
+          if (name === "Mustafizur Rahman" && !mustafizurCleared) return "Sushant Mishra";
+          if (name === "Wanindu Hasaranga" && !hasarangaCleared) return "Sushant Mishra";
+          return name;
+        });
+
+  // Track additions in the scenario
+  const additionsInXI = Array.from(new Set(selectedXI.filter((name) => !retainedByName.has(name))));
+
+  const scenarioAdditions =
+    activeScenarioId === "custom"
+      ? additionsInXI
+      : Array.from(
+          new Set([
+            ...activeScenario.conditionalAcquisitions.map((c) => c.playerName),
+            ...additionsInXI,
+          ]),
         );
-  const currentOverseas = selected.filter(
-    (name) => retainedByName.get(name)?.overseas ?? targetByName.get(name)?.overseas ?? false,
-  ).length;
-  const chosenTargets = [...new Set(selected.filter((name) => !retainedByName.has(name)))];
-  const overseasAdds = chosenTargets.filter((name) => targetByName.get(name)?.overseas).length;
-  const squadSize = team.squad_size + chosenTargets.length;
-  const unavailable = selected.filter(
-    (name) =>
-      name === "Jacob Bethell" ||
-      name === "Mitchell Starc" ||
-      (name === "Matheesha Pathirana" && !pathiranaCleared) ||
-      (name === "Mustafizur Rahman" && !mustafizurCleared) ||
-      (name === "Wanindu Hasaranga" && !hasarangaCleared),
+
+  const activeHypotheticalAcquisitions = scenarioAdditions.filter((name) => {
+    if (name === "Matheesha Pathirana" && !pathiranaCleared) return false;
+    if (name === "Mustafizur Rahman" && !mustafizurCleared) return false;
+    if (name === "Wanindu Hasaranga" && !hasarangaCleared) return false;
+    return true;
+  });
+
+  const retainedPlayerNames = team.retained_players.map((p) => p.name);
+  const scenarioSquad = [...retainedPlayerNames, ...activeHypotheticalAcquisitions];
+
+  // Pure domain calculations
+  const squadValidation = validateSquad({
+    hypotheticalAcquisitions: activeHypotheticalAcquisitions,
+    options: assessmentOptions,
+  });
+
+  const xiValidation = validatePlayingXI({
+    playingXI: selectedXI,
+    squadPlayers: scenarioSquad,
+    options: assessmentOptions,
+  });
+
+  const benchDisplacement = calculateBenchDisplacement(
+    selectedXI,
+    scenarioSquad,
+    retainedPlayerNames,
   );
-  const roleOptions = [
-    ...team.retained_players.map((player) => player.name),
-    ...data.auction_watchlist
-      .map((player) => player.name)
-      .filter((name) => !["Jacob Bethell", "Mitchell Starc"].includes(name)),
-  ];
-  function chooseScenario(item: Scenario) {
-    setActive(item.id);
-    setLineup(item.xi);
-    setMessage("");
+
+  const playerBids: PlayerBid[] = activeHypotheticalAcquisitions.map((name) => ({
+    playerName: name,
+    amountCrore: scenarioBids[name] ?? 0,
+    isHypothetical: true,
+  }));
+
+  const purseResult = calculatePurse(playerBids);
+
+  function chooseScenario(item: NormalizedScenario) {
+    setActiveScenarioId(item.id);
+    const resolvedXI = item.startingXI.map((name) => {
+      if (name === "Matheesha Pathirana" && !pathiranaCleared) return "Sushant Mishra";
+      if (name === "Mustafizur Rahman" && !mustafizurCleared) return "Sushant Mishra";
+      if (name === "Wanindu Hasaranga" && !hasarangaCleared) return "Sushant Mishra";
+      return name;
+    });
+    setCustomLineup(resolvedXI);
+    setUserMessage("");
   }
-  function updateSlot(index: number, value: string) {
-    const next = selected.map((name, i) => (i === index ? value : name));
-    if (next.filter((name, i) => next.indexOf(name) !== i).length > 0) {
-      setMessage(
-        "A player cannot occupy two positions in the same proposed XI. Select a different player for this slot.",
+
+  function updateSlot(index: number, newPlayer: string) {
+    if (selectedXI[index] === newPlayer) return;
+
+    // Duplicate check
+    const duplicateIndex = selectedXI.findIndex((name, i) => i !== index && name === newPlayer);
+    if (duplicateIndex !== -1) {
+      setUserMessage(
+        `Duplicate player: "${newPlayer}" is already selected in batting slot ${duplicateIndex + 1}. A player cannot occupy two positions in the proposed playing XI.`,
       );
       return;
     }
-    const nextTargets = [...new Set(next.filter((name) => !retainedByName.has(name)))];
-    if (nextTargets.length > team.slots_remaining) {
-      setMessage(
-        "This scenario would add more players than RR's six open squad spaces. Replace a target or keep the role vacant.",
+
+    // Availability checks
+    if (newPlayer === "Jacob Bethell" || newPlayer === "Mitchell Starc") {
+      setUserMessage(
+        `Selection rejected: "${newPlayer}" is not selectable under the current availability snapshot.`,
       );
       return;
     }
-    if (
+
+    if (newPlayer === "Matheesha Pathirana" && !pathiranaCleared) {
+      setUserMessage(
+        "Pathirana requires independent medical review and clearance before selection in an analyst scenario.",
+      );
+      return;
+    }
+    if (newPlayer === "Mustafizur Rahman" && !mustafizurCleared) {
+      setUserMessage(
+        "Mustafizur requires independent medical review before selection in an analyst scenario.",
+      );
+      return;
+    }
+    if (newPlayer === "Wanindu Hasaranga" && !hasarangaCleared) {
+      setUserMessage(
+        "Hasaranga requires workload and spin-role review before selection in an analyst scenario.",
+      );
+      return;
+    }
+
+    const nextXI = selectedXI.map((name, i) => (i === index ? newPlayer : name));
+
+    // Overseas in XI limit check
+    const proposedOverseasInXI = nextXI.filter((name) => {
+      const details = resolvePlayerDetails(name);
+      return details.overseas;
+    }).length;
+
+    if (proposedOverseasInXI > MAX_OVERSEAS_PLAYING_XI) {
+      setUserMessage(
+        `Selection rejected: This proposed XI would contain ${proposedOverseasInXI} overseas players, exceeding the maximum limit of ${MAX_OVERSEAS_PLAYING_XI}.`,
+      );
+      return;
+    }
+
+    // Squad vacancies check
+    const nextAdditions = Array.from(new Set(nextXI.filter((name) => !retainedByName.has(name))));
+    if (nextAdditions.length > team.slots_remaining) {
+      setUserMessage(
+        `Selection rejected: Adding "${newPlayer}" would exceed RR's ${team.slots_remaining} available squad vacancies.`,
+      );
+      return;
+    }
+
+    // Squad overseas limit check
+    const proposedOverseasSquad =
       team.retained_overseas_count +
-        nextTargets.filter((name) => targetByName.get(name)?.overseas).length >
-      team.overseas_squad_cap
-    ) {
-      setMessage(
-        "RR can add at most three more overseas squad players under the eight-player squad limit. Choose an Indian option or a retained player.",
+      nextAdditions.filter((name) => {
+        const details = resolvePlayerDetails(name);
+        return details.overseas;
+      }).length;
+
+    if (proposedOverseasSquad > MAX_OVERSEAS_SQUAD) {
+      setUserMessage(
+        `Selection rejected: Adding "${newPlayer}" would give ${proposedOverseasSquad} overseas squad members, exceeding the cap of ${MAX_OVERSEAS_SQUAD}.`,
       );
       return;
     }
-    if (
-      next.filter(
-        (name) => retainedByName.get(name)?.overseas ?? targetByName.get(name)?.overseas ?? false,
-      ).length > 4
-    ) {
-      setMessage(
-        "This XI would have more than four overseas players. Choose an Indian option or bench an overseas player.",
-      );
-      return;
-    }
-    if (next.includes("Matheesha Pathirana") && !pathiranaCleared) {
-      setMessage(
-        "Pathirana stays out of selection until medical clearance is explicitly enabled for this analyst scenario.",
-      );
-      return;
-    }
-    if (next.includes("Mustafizur Rahman") && !mustafizurCleared) {
-      setMessage(
-        "Mustafizur stays out of selection until medical review is explicitly enabled for this analyst scenario.",
-      );
-      return;
-    }
-    if (next.includes("Wanindu Hasaranga") && !hasarangaCleared) {
-      setMessage(
-        "Hasaranga stays out of selection until workload and role-overlap review are explicitly enabled for this analyst scenario.",
-      );
-      return;
-    }
-    if (next.includes("Jacob Bethell") || next.includes("Mitchell Starc")) {
-      setMessage("This player is not selectable under the current availability snapshot.");
-      return;
-    }
-    setLineup(next);
-    setActive("custom");
-    setMessage("");
+
+    // Valid: update custom lineup and switch to custom mode
+    setCustomLineup(nextXI);
+    setActiveScenarioId("custom");
+    setUserMessage("");
   }
+
+  function handleBidChange(playerName: string, rawValue: string) {
+    const trimmed = rawValue.trim();
+    if (trimmed === "") {
+      setScenarioBids((prev) => {
+        const next = { ...prev };
+        delete next[playerName];
+        return next;
+      });
+      return;
+    }
+
+    const parsed = parseFloat(trimmed);
+    if (!Number.isFinite(parsed)) {
+      setUserMessage(`Bid for "${playerName}" must be a valid number.`);
+      return;
+    }
+
+    if (parsed < 0) {
+      setUserMessage(`Bid for "${playerName}" cannot be negative.`);
+      return;
+    }
+
+    setUserMessage("");
+    setScenarioBids((prev) => ({
+      ...prev,
+      [playerName]: parsed,
+    }));
+  }
+
+  // Dynamic Impact Player choices based on bench displacement
+  const availableBench = benchDisplacement.benchPlayers;
   const impactChoices =
     impactSituation === "Slow pitch"
-      ? ["Yash Raj Punja", "Manimaran Siddharth", "Ravi Bishnoi", "Ravindra Jadeja"]
+      ? availableBench.filter((name) => {
+          const details = resolvePlayerDetails(name);
+          return (
+            details.role?.toLowerCase().includes("spin") ||
+            ["Yash Raj Punja", "Manimaran Siddharth", "Ravi Bishnoi", "Ravindra Jadeja"].includes(
+              name,
+            )
+          );
+        })
       : impactSituation === "Flat / dewy pitch" || impactSituation === "Batting first"
-        ? ["Sandeep Sharma", "Brijesh Sharma", "Sushant Mishra", "Mohammed Shami"]
-        : ["Shubham Dubey", "Nehal Wadhera", "Donovan Ferreira", "Aman Rao Perala"];
+        ? availableBench.filter((name) => {
+            const details = resolvePlayerDetails(name);
+            return (
+              details.role?.toLowerCase().includes("fast") ||
+              details.role?.toLowerCase().includes("seam") ||
+              details.role?.toLowerCase().includes("pace") ||
+              ["Sandeep Sharma", "Mohammed Shami", "Sushant Mishra", "Nandre Burger"].includes(name)
+            );
+          })
+        : availableBench.filter((name) => {
+            const details = resolvePlayerDetails(name);
+            return (
+              details.role?.toLowerCase().includes("bat") ||
+              details.role?.toLowerCase().includes("wicketkeeper") ||
+              ["Shubham Dubey", "Nehal Wadhera", "Donovan Ferreira"].includes(name)
+            );
+          });
+
+  const resolvedImpactChoices = impactChoices.length > 0 ? impactChoices : availableBench;
+
+  const roleOptions = [
+    ...team.retained_players.map((player) => player.name),
+    ...data.auction_watchlist.map((player) => player.name),
+  ];
+
+  const allValidationErrors = [
+    ...xiValidation.errors,
+    ...squadValidation.errors,
+    ...purseResult.errors,
+  ];
+
+  const allValidationWarnings = [...xiValidation.warnings, ...squadValidation.warnings];
+
   return (
     <PageFrame>
       <main>
         <LeadIn
           path="/squad"
-          kicker="Roster construction · analyst scenario builder"
+          kicker="Roster construction · squad rules & scenario engine"
           title="The working XI"
-          description="Switch conditions and role hypotheses, then edit the proposed XI. Squad counts respond to target selections; no scenario is an official confirmed lineup."
+          description="Switch match plans and hypothetical recruitment targets, then customize the proposed XI. Every metric, constraint check, bench displacement and purse consequence is dynamically calculated by the central domain engine."
         />
         <section className="px-5 pb-16 sm:px-8">
           <div className="mx-auto max-w-7xl">
+            {/* Top Metrics Strip */}
             <div className="grid grid-cols-2 gap-4 border-y border-border py-5 sm:grid-cols-3 lg:grid-cols-6">
-              <Metric value={`${squadSize} / 25`} label="Scenario squad" />
               <Metric
-                value={Math.max(0, team.max_squad_size - squadSize)}
-                label="Squad spaces left"
+                value={`${squadValidation.squadSize} / ${MAX_SQUAD_SIZE}`}
+                label="Scenario squad"
+              />
+              <Metric value={squadValidation.vacanciesRemaining} label="Squad spaces left" accent />
+              <Metric
+                value={`${xiValidation.overseasCount} / ${MAX_OVERSEAS_PLAYING_XI}`}
+                label="Overseas in proposed XI"
                 accent
               />
-              <Metric value={`${currentOverseas} / 4`} label="Overseas in proposed XI" accent />
               <Metric
-                value={`${team.retained_overseas_count + overseasAdds} / 8`}
+                value={`${squadValidation.overseasCount} / ${MAX_OVERSEAS_SQUAD}`}
                 label="Overseas in squad scenario"
               />
-              <Metric value="₹27.05 Cr" label="Purse snapshot" />
+              <Metric
+                value={`₹${purseResult.remainingPurseCrore.toFixed(2)} Cr`}
+                label={
+                  purseResult.totalHypotheticalSpendCrore > 0
+                    ? `Hypothetical left (spent ₹${purseResult.totalHypotheticalSpendCrore.toFixed(2)} Cr)`
+                    : "Purse snapshot (locked ₹27.05 Cr)"
+                }
+              />
               <Metric value="19 retained" label="Roster locked" />
             </div>
+
+            {/* Scenario Header & Selector */}
             <div className="my-8 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] uppercase tracking-[.18em] text-royal-pink">
@@ -728,16 +660,25 @@ export function SquadPage() {
                 </p>
                 <h2 className="display-face mt-1 text-3xl">Choose a match plan</h2>
               </div>
-              <span className="border border-royal-gold/40 px-3 py-2 text-[10px] uppercase tracking-wider text-royal-gold">
-                Proposed scenario · analyst working XI
-              </span>
+              <div className="flex items-center gap-2">
+                {activeScenarioId === "custom" && (
+                  <span className="border border-royal-pink bg-royal-pink/10 px-3 py-1 text-[10px] uppercase font-bold tracking-wider text-royal-pink">
+                    Custom working lineup active
+                  </span>
+                )}
+                <span className="border border-royal-gold/40 px-3 py-2 text-[10px] uppercase tracking-wider text-royal-gold">
+                  Analyst scenario · hypothetical planning
+                </span>
+              </div>
             </div>
+
+            {/* Scenario Tabs */}
             <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-              {scenarios.map((item) => (
+              {NORMALIZED_SCENARIOS.map((item) => (
                 <Button
                   key={item.id}
                   size="sm"
-                  variant={active === item.id ? "default" : "outline"}
+                  variant={activeScenarioId === item.id ? "default" : "outline"}
                   className="shrink-0 rounded-sm text-[10px] uppercase"
                   onClick={() => chooseScenario(item)}
                 >
@@ -745,41 +686,53 @@ export function SquadPage() {
                 </Button>
               ))}
             </div>
+
+            {/* Main Interactive Grid: XI Pitch vs Aside Strategy */}
             <div className="grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
+              {/* Pitch / Lineup Construction */}
               <div className="pitch-surface border border-border p-4 sm:p-6">
                 <div className="mb-5 flex flex-wrap justify-between gap-3">
                   <div>
                     <p className="text-[9px] uppercase tracking-[.16em] text-royal-gold">
-                      {scenario.purpose}
+                      {activeScenarioId === "custom"
+                        ? "User modified lineup"
+                        : activeScenario.purpose}
                     </p>
-                    <h3 className="display-face mt-1 text-2xl sm:text-3xl">{scenario.title}</h3>
+                    <h3 className="display-face mt-1 text-2xl sm:text-3xl">
+                      {activeScenarioId === "custom" ? "Custom working XI" : activeScenario.title}
+                    </h3>
                   </div>
-                  <span
-                    className={cn(
-                      "h-fit border px-3 py-2 text-xs font-bold",
-                      currentOverseas > 4
-                        ? "border-destructive text-destructive"
-                        : "border-border text-foreground",
-                    )}
-                  >
-                    {currentOverseas} / 4 overseas
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "h-fit border px-3 py-2 text-xs font-bold",
+                        xiValidation.overseasCount > MAX_OVERSEAS_PLAYING_XI
+                          ? "border-destructive text-destructive"
+                          : "border-border text-foreground",
+                      )}
+                    >
+                      {xiValidation.overseasCount} / {MAX_OVERSEAS_PLAYING_XI} overseas
+                    </span>
+                  </div>
                 </div>
+
                 <div className="mb-4 grid grid-cols-[42px_1fr] gap-2 border-b border-border pb-2 text-[9px] uppercase tracking-widest text-muted-foreground">
                   <span>Bat</span>
-                  <span>Player · select to change</span>
+                  <span>Player · select to customize proposed XI</span>
                 </div>
+
+                {/* 11 Batting Slots */}
                 <div className="space-y-1.5">
-                  {selected.map((name, index) => {
+                  {selectedXI.map((name, index) => {
                     const retained = retainedByName.get(name);
                     const target = targetByName.get(name);
-                    const player = retained ?? target;
-                    const overseas = player?.overseas ?? false;
-                    const unavailableOption = name === "Jacob Bethell" || name === "Mitchell Starc";
-                    const gate =
+                    const details = resolvePlayerDetails(name);
+                    const overseas = details.overseas;
+                    const isGated =
                       (name === "Matheesha Pathirana" && !pathiranaCleared) ||
                       (name === "Mustafizur Rahman" && !mustafizurCleared) ||
                       (name === "Wanindu Hasaranga" && !hasarangaCleared);
+
                     return (
                       <div
                         key={`${index}-${name}`}
@@ -795,50 +748,63 @@ export function SquadPage() {
                             onChange={(event) => updateSlot(index, event.target.value)}
                             className={makeSelectClass("min-w-0 flex-1")}
                           >
-                            <optgroup label="Retained">
-                              <option value={name}>
-                                {name} · {retained?.role ?? target?.role ?? "role to review"}
-                              </option>
+                            <optgroup label="Retained Roster (19 Players · Locked)">
+                              {team.retained_players.map((p) => (
+                                <option key={p.name} value={p.name}>
+                                  {p.name} · {p.role} · {p.overseas ? "Overseas" : "Indian"}
+                                </option>
+                              ))}
                             </optgroup>
-                            <optgroup label="Choose player">
-                              {roleOptions.map((option) => {
-                                const p = retainedByName.get(option) ?? targetByName.get(option);
+                            <optgroup label="Conditional Watchlist (Unverified Registration)">
+                              {data.auction_watchlist.map((p) => {
+                                const isUnavailable =
+                                  p.name === "Jacob Bethell" || p.name === "Mitchell Starc";
                                 const gateDisabled =
-                                  (option === "Matheesha Pathirana" && !pathiranaCleared) ||
-                                  (option === "Mustafizur Rahman" && !mustafizurCleared) ||
-                                  (option === "Wanindu Hasaranga" && !hasarangaCleared);
+                                  (p.name === "Matheesha Pathirana" && !pathiranaCleared) ||
+                                  (p.name === "Mustafizur Rahman" && !mustafizurCleared) ||
+                                  (p.name === "Wanindu Hasaranga" && !hasarangaCleared);
+
                                 return (
                                   <option
-                                    key={option}
-                                    value={option}
-                                    disabled={
-                                      gateDisabled ||
-                                      option === "Jacob Bethell" ||
-                                      option === "Mitchell Starc"
-                                    }
+                                    key={p.name}
+                                    value={p.name}
+                                    disabled={gateDisabled || isUnavailable}
                                   >
-                                    {option}
-                                    {p?.overseas ? " · Overseas" : " · Indian"}
-                                    {targetByName.has(option) ? " · registration unverified" : ""}
-                                    {gateDisabled ? " · medical review required" : ""}
+                                    {p.name} · {p.role} · {p.overseas ? "Overseas" : "Indian"} ·
+                                    {isUnavailable
+                                      ? " Unavailable for 2027"
+                                      : gateDisabled
+                                        ? " Medical/workload review required"
+                                        : " Registration unverified"}
                                   </option>
                                 );
                               })}
                             </optgroup>
                           </select>
+
+                          {/* Explicit Status Badges */}
                           <span
                             className={cn(
                               "shrink-0 border px-2 py-1 text-[8px] uppercase tracking-wide",
-                              overseas
-                                ? "border-royal-gold/60 text-royal-gold"
-                                : "border-border text-muted-foreground",
+                              retained
+                                ? "border-border text-muted-foreground"
+                                : "border-royal-gold/60 text-royal-gold font-medium",
                             )}
                           >
-                            {retained ? "Retained" : target ? "Target · unverified" : "Squad"}
+                            {retained
+                              ? "Retained · locked"
+                              : "Hypothetical candidate · unverified registration"}
                           </span>
-                          {(unavailableOption || gate) && (
-                            <span className="text-[9px] text-destructive">
-                              {gate ? "Medical gate" : "Unavailable"}
+
+                          {overseas && (
+                            <span className="shrink-0 border border-royal-pink/60 px-2 py-0.5 text-[8px] uppercase tracking-wide text-royal-pink">
+                              Overseas
+                            </span>
+                          )}
+
+                          {isGated && (
+                            <span className="text-[9px] text-destructive font-medium">
+                              Medical/review gate required
                             </span>
                           )}
                         </div>
@@ -846,55 +812,158 @@ export function SquadPage() {
                     );
                   })}
                 </div>
-                {message && (
+
+                {/* Validation Feedback & Alerts */}
+                {userMessage && (
                   <p
                     role="alert"
-                    className="mt-4 flex items-start gap-2 border border-destructive/60 p-3 text-xs leading-5 text-destructive"
+                    className="mt-4 flex items-start gap-2 border border-destructive/60 bg-destructive/10 p-3 text-xs leading-5 text-destructive"
                   >
                     <AlertTriangle size={15} className="mt-0.5 shrink-0" />
-                    {message}
+                    {userMessage}
                   </p>
                 )}
-                {unavailable.length > 0 && (
-                  <p className="mt-4 text-xs text-destructive">
-                    Unavailable / gated selection detected: {unavailable.join(", ")}
-                  </p>
+
+                {allValidationErrors.length > 0 && (
+                  <div className="mt-4 space-y-1.5 border border-destructive/60 bg-destructive/10 p-3 text-xs text-destructive">
+                    <p className="font-semibold uppercase tracking-wider text-[10px]">
+                      Squad Rules Validation Violations:
+                    </p>
+                    <ul className="list-inside list-disc space-y-1 text-xs">
+                      {allValidationErrors.map((err) => (
+                        <li key={err}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
+
+                {allValidationWarnings.length > 0 && (
+                  <div className="mt-3 space-y-1 border border-royal-gold/40 bg-royal-gold/5 p-3 text-xs text-royal-gold">
+                    <p className="font-semibold uppercase tracking-wider text-[10px]">
+                      Planning Warnings:
+                    </p>
+                    <ul className="list-inside list-disc space-y-0.5 text-xs">
+                      {allValidationWarnings.map((warn) => (
+                        <li key={warn}>{warn}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Live Footprint Summary */}
                 <div className="mt-5 flex flex-wrap gap-4 border-t border-border pt-4 text-[10px] text-muted-foreground">
-                  <span>Squad scenario: {squadSize} / 25</span>
-                  <span>Added targets: {chosenTargets.length}</span>
-                  <span>New overseas in scenario: {overseasAdds} / 3</span>
+                  <span>Squad scenario: {squadValidation.squadSize} / 25</span>
+                  <span>Added conditional targets: {squadValidation.acquisitionsCount}</span>
+                  <span>
+                    New overseas in scenario:{" "}
+                    {squadValidation.overseasCount - team.retained_overseas_count} / 3
+                  </span>
+                  <span>
+                    Displaced retained players: {benchDisplacement.displacedRetainedPlayers.length}
+                  </span>
                 </div>
               </div>
+
+              {/* Aside: Tactical Strategic Analysis */}
               <aside className="space-y-5">
-                <div className="border border-border p-5">
-                  <p className="text-[9px] uppercase tracking-[.16em] text-royal-pink">
-                    Why this combination
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-foreground">{scenario.why}</p>
-                  <div className="my-4 section-rule" />
-                  <p className="text-[9px] uppercase tracking-[.16em] text-royal-gold">Trade-off</p>
-                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{scenario.trade}</p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                  {[
-                    ["New ball", scenario.newBall],
-                    ["Middle-over control", scenario.middle],
-                    ["Death-over plan", scenario.death],
-                    ["Fallback", scenario.fallback],
-                  ].map(([label, value]) => (
-                    <div key={label} className="border-l border-royal-gold/60 bg-card/60 px-4 py-3">
-                      <p className="text-[9px] uppercase tracking-wider text-royal-gold">{label}</p>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">{value}</p>
+                {activeScenarioId === "custom" ? (
+                  <div className="border border-royal-gold/60 bg-card/80 p-5">
+                    <p className="text-[9px] uppercase tracking-[.16em] text-royal-pink">
+                      Custom Working Lineup
+                    </p>
+                    <h4 className="display-face mt-1 text-xl text-foreground">
+                      User-Modified Combination
+                    </h4>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                      Predefined strategic claims (tactical rationale, trade-off notes, phase
+                      bowling plans) do not apply to custom player selections.
+                    </p>
+                    <p className="mt-2 text-xs leading-5 text-royal-gold">
+                      Live squad rules validation, role coverage analysis, bench displacement, and
+                      hypothetical purse impacts are dynamically calculated below.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-4 rounded-sm text-[10px] uppercase tracking-wider"
+                      onClick={() =>
+                        chooseScenario(
+                          NORMALIZED_SCENARIOS.find((s) => s.id === "balanced") ??
+                            NORMALIZED_SCENARIOS[0]!,
+                        )
+                      }
+                    >
+                      <RotateCcw size={12} className="mr-1.5" /> Reset to Core Balanced Plan
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="border border-border p-5">
+                      <p className="text-[9px] uppercase tracking-[.16em] text-royal-pink">
+                        Why this combination
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-foreground">{activeScenario.why}</p>
+                      <div className="my-4 section-rule" />
+                      <p className="text-[9px] uppercase tracking-[.16em] text-royal-gold">
+                        Trade-off
+                      </p>
+                      <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                        {activeScenario.trade}
+                      </p>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                      {[
+                        ["New ball", activeScenario.newBall],
+                        ["Middle-over control", activeScenario.middle],
+                        ["Death-over plan", activeScenario.death],
+                        ["Fallback", activeScenario.fallback],
+                      ].map(([label, value]) => (
+                        <div
+                          key={label}
+                          className="border-l border-royal-gold/60 bg-card/60 px-4 py-3"
+                        >
+                          <p className="text-[9px] uppercase tracking-wider text-royal-gold">
+                            {label}
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-muted-foreground">{value}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Reconciled Alternatives */}
+                    {activeScenario.alternatives && activeScenario.alternatives.length > 0 && (
+                      <div className="border border-border bg-card/40 p-4">
+                        <p className="text-[9px] uppercase tracking-wider text-royal-pink font-semibold">
+                          Tactical Alternatives & Rotations
+                        </p>
+                        <div className="mt-2 space-y-2">
+                          {activeScenario.alternatives.map((alt) => (
+                            <div key={alt.alternativePlayer} className="text-xs">
+                              <span className="font-semibold text-foreground">
+                                {alt.primaryPlayer} ↔ {alt.alternativePlayer}
+                              </span>
+                              <span className="text-[10px] text-royal-gold ml-1.5">
+                                ({alt.role})
+                              </span>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                {alt.reason}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </aside>
             </div>
+
+            {/* Impact Player Scenarios */}
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {[
-                ["Batting first", scenario.batImpact],
-                ["Bowling first", scenario.bowlImpact],
+                ["Batting first", activeScenario.batImpact],
+                ["Bowling first", activeScenario.bowlImpact],
               ].map(([label, value]) => (
                 <div key={label} className="border border-border p-4">
                   <p className="text-[9px] uppercase tracking-wider text-royal-pink">
@@ -904,12 +973,217 @@ export function SquadPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-12 grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+
+            {/* Live Squad Analytics: Role Coverage & Bench Displacement */}
+            <div className="mt-10 grid gap-6 lg:grid-cols-2">
+              {/* Role Coverage Summary */}
+              <div className="border border-border p-5 bg-card/50">
+                <Subhead>Live Playing XI Role Coverage</Subhead>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Dynamic breakdown derived directly from the selected 11 starters.
+                </p>
+                <div className="grid grid-cols-2 gap-3 text-xs mb-4">
+                  <div className="border border-border/80 p-3 bg-background/50">
+                    <span className="text-[10px] uppercase text-muted-foreground block">
+                      Wicketkeepers in XI
+                    </span>
+                    <span className="display-face text-xl text-royal-gold">
+                      {xiValidation.roleCoverage.wicketkeeperCount}
+                    </span>
+                  </div>
+                  <div className="border border-border/80 p-3 bg-background/50">
+                    <span className="text-[10px] uppercase text-muted-foreground block">
+                      Bowling Options in XI
+                    </span>
+                    <span className="display-face text-xl text-royal-pink">
+                      {xiValidation.roleCoverage.bowlingOptionsCount}
+                    </span>
+                  </div>
+                  <div className="border border-border/80 p-3 bg-background/50">
+                    <span className="text-[10px] uppercase text-muted-foreground block">
+                      Overseas Starters
+                    </span>
+                    <span className="display-face text-xl text-foreground">
+                      {xiValidation.roleCoverage.overseasPlayers.length} / {MAX_OVERSEAS_PLAYING_XI}
+                    </span>
+                    <small className="text-[9px] text-muted-foreground block truncate">
+                      {xiValidation.roleCoverage.overseasPlayers.join(", ") || "None"}
+                    </small>
+                  </div>
+                  <div className="border border-border/80 p-3 bg-background/50">
+                    <span className="text-[10px] uppercase text-muted-foreground block">
+                      Indian Starters
+                    </span>
+                    <span className="display-face text-xl text-foreground">
+                      {xiValidation.roleCoverage.indianPlayers.length}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-border pt-3">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground block mb-2 font-semibold">
+                    Role Distribution in XI
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(xiValidation.roleCoverage.roleCounts).map(([role, count]) => (
+                      <span
+                        key={role}
+                        className="border border-border px-2 py-0.5 text-[10px] text-foreground bg-background/40"
+                      >
+                        {role}: <b className="text-royal-gold">{count}</b>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bench Displacement */}
+              <div className="border border-border p-5 bg-card/50">
+                <Subhead>Retained Bench Displacement</Subhead>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Retained players displaced to the bench by current XI selections or hypothetical
+                  signings.
+                </p>
+                <div className="grid grid-cols-2 gap-3 text-xs mb-4">
+                  <div className="border border-border/80 p-3 bg-background/50">
+                    <span className="text-[10px] uppercase text-muted-foreground block">
+                      Retained in Starting XI
+                    </span>
+                    <span className="display-face text-xl text-royal-gold">
+                      {benchDisplacement.startingRetainedPlayers.length} / 19
+                    </span>
+                  </div>
+                  <div className="border border-border/80 p-3 bg-background/50">
+                    <span className="text-[10px] uppercase text-muted-foreground block">
+                      Retained Displaced to Bench
+                    </span>
+                    <span className="display-face text-xl text-royal-pink">
+                      {benchDisplacement.displacedRetainedPlayers.length}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-border pt-3">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground block mb-2 font-semibold">
+                    Displaced Retained Players ({benchDisplacement.displacedRetainedPlayers.length})
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {benchDisplacement.displacedRetainedPlayers.map((name) => (
+                      <span
+                        key={name}
+                        className="border border-border px-2 py-0.5 text-[10px] text-muted-foreground bg-background/40"
+                      >
+                        {name}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[11px] text-muted-foreground leading-4">
+                    {benchDisplacement.summary}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Hypothetical Purse Simulation & Explicit Bids */}
+            <div className="mt-10 border border-border p-5 bg-card/60">
+              <Subhead>Purse Modeler · Explicit Bid Simulation</Subhead>
+              <p className="text-xs leading-5 text-muted-foreground mb-4">
+                Enter explicit hypothetical bid valuations (in ₹ Crore) for prospective auction
+                additions. No bid is invented or automatically deducted from RR's ₹27.05 Cr
+                remaining purse.
+              </p>
+
+              {activeHypotheticalAcquisitions.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic border border-border/60 p-3">
+                  Current scenario consists entirely of retained players. No hypothetical auction
+                  spend required.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-[1fr_120px] gap-2 border-b border-border pb-1.5 text-[9px] uppercase tracking-wider text-muted-foreground">
+                    <span>Prospective Addition</span>
+                    <span>Hypothetical Bid (₹ Cr)</span>
+                  </div>
+                  {activeHypotheticalAcquisitions.map((name) => {
+                    const details = resolvePlayerDetails(name);
+                    const currentBid = scenarioBids[name] ?? "";
+
+                    return (
+                      <div
+                        key={name}
+                        className="grid grid-cols-[1fr_120px] items-center gap-2 border-b border-border/40 py-2"
+                      >
+                        <div>
+                          <span className="text-xs font-semibold text-foreground mr-2">{name}</span>
+                          <span className="border border-royal-gold/60 text-royal-gold text-[8px] uppercase px-1.5 py-0.5">
+                            Unverified registration · conditional
+                          </span>
+                          <small className="block text-[10px] text-muted-foreground mt-0.5">
+                            {details.role ?? "Role in review"} ·{" "}
+                            {details.overseas ? "Overseas" : "Indian"}
+                          </small>
+                        </div>
+                        <div>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.25"
+                            placeholder="0.00"
+                            value={currentBid}
+                            onChange={(e) => handleBidChange(name, e.target.value)}
+                            className="h-8 text-right font-mono text-xs"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Purse Results Strip */}
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-border pt-4">
+                <div className="border border-border/60 p-3 bg-background/50">
+                  <span className="text-[9px] uppercase text-muted-foreground block">
+                    Actual Retained Purse
+                  </span>
+                  <span className="display-face text-lg text-foreground">
+                    ₹{INITIAL_PURSE_CRORE.toFixed(2)} Cr
+                  </span>
+                </div>
+                <div className="border border-border/60 p-3 bg-background/50">
+                  <span className="text-[9px] uppercase text-muted-foreground block">
+                    Total Hypothetical Spend
+                  </span>
+                  <span className="display-face text-lg text-royal-pink">
+                    ₹{purseResult.totalHypotheticalSpendCrore.toFixed(2)} Cr
+                  </span>
+                </div>
+                <div
+                  className={cn(
+                    "border p-3 bg-background/50",
+                    purseResult.remainingPurseCrore < 0
+                      ? "border-destructive text-destructive"
+                      : "border-border/60 text-royal-gold",
+                  )}
+                >
+                  <span className="text-[9px] uppercase text-muted-foreground block">
+                    Projected Remaining Purse
+                  </span>
+                  <span className="display-face text-lg">
+                    ₹{purseResult.remainingPurseCrore.toFixed(2)} Cr
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Impact Player Controls & Medical / Role Review Gates */}
+            <div className="mt-10 grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
               <div className="border border-border p-5">
                 <Subhead>Impact Player</Subhead>
                 <p className="mb-4 text-xs leading-5 text-muted-foreground">
                   Regulation continues in the 2025–27 cycle; final 2027 playing conditions remain
-                  subject to official confirmation. It does not bypass the overseas cap.
+                  subject to official confirmation. Impact substitutions drawn dynamically from
+                  available bench reserves.
                 </p>
                 <label className="mb-2 block text-[10px] uppercase tracking-wider text-muted-foreground">
                   Match situation
@@ -918,24 +1192,7 @@ export function SquadPage() {
                   value={impactSituation}
                   onChange={(e) => {
                     const value = e.target.value;
-                    const options =
-                      value === "Slow pitch"
-                        ? [
-                            "Yash Raj Punja",
-                            "Manimaran Siddharth",
-                            "Ravi Bishnoi",
-                            "Ravindra Jadeja",
-                          ]
-                        : value === "Flat / dewy pitch" || value === "Batting first"
-                          ? ["Sandeep Sharma", "Brijesh Sharma", "Sushant Mishra", "Mohammed Shami"]
-                          : [
-                              "Shubham Dubey",
-                              "Nehal Wadhera",
-                              "Donovan Ferreira",
-                              "Aman Rao Perala",
-                            ];
                     setImpactSituation(value);
-                    setImpactPlayer(options[0] ?? "");
                   }}
                   className={makeSelectClass("mb-4")}
                 >
@@ -945,25 +1202,31 @@ export function SquadPage() {
                   <option>Flat / dewy pitch</option>
                   <option>Top-order collapse</option>
                 </select>
+
                 <label className="mb-2 block text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Impact option
+                  Impact option (from available bench)
                 </label>
                 <select
                   value={impactPlayer}
                   onChange={(e) => setImpactPlayer(e.target.value)}
                   className={makeSelectClass()}
                 >
-                  {impactChoices.map((name) => (
-                    <option key={name}>{name}</option>
+                  {resolvedImpactChoices.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
                   ))}
                 </select>
               </div>
+
+              {/* Medical & Role-Review Gates */}
               <div className="space-y-4 border border-border p-5">
                 <div>
-                  <Subhead>Medical & role-review gates</Subhead>
+                  <Subhead>Analyst Medical & Role-Review Gates</Subhead>
                   <p className="mb-3 text-xs leading-5 text-muted-foreground">
-                    These analyst controls do not certify fitness or registration; they only expose
-                    conditional targets to this editable scenario after review.
+                    These controls represent hypothetical analyst scenario toggles for modeling
+                    purposes only. Enabling a gate does NOT constitute official medical clearance,
+                    workload resolution, or verified auction registration.
                   </p>
                 </div>
                 {[
@@ -977,7 +1240,7 @@ export function SquadPage() {
                     name: "Mustafizur Rahman",
                     checked: mustafizurCleared,
                     set: setMustafizurCleared,
-                    summary: "Medical status and registration require verification.",
+                    summary: "Medical status and registration require independent verification.",
                   },
                   {
                     name: "Wanindu Hasaranga",
@@ -997,10 +1260,11 @@ export function SquadPage() {
                       onChange={(e) => {
                         const enabled = e.target.checked;
                         gate.set(enabled);
-                        if (!enabled)
-                          setLineup((current) =>
+                        if (!enabled) {
+                          setCustomLineup((current) =>
                             current.map((name) => (name === gate.name ? "Sushant Mishra" : name)),
                           );
+                        }
                       }}
                       className="mt-1 size-4 accent-[var(--color-royal-pink)]"
                     />
@@ -1011,7 +1275,7 @@ export function SquadPage() {
                       </small>
                       <small className="mt-1 block text-[9px] text-royal-gold">
                         {gate.checked
-                          ? "Analyst review gate enabled; current status not independently verified"
+                          ? "Analyst scenario gate enabled (Analyst model only; does not assert actual medical clearance or registration)"
                           : "Requires review before selection"}
                       </small>
                     </span>
@@ -1019,12 +1283,14 @@ export function SquadPage() {
                 ))}
               </div>
             </div>
+
+            {/* Retained Roster & Vacancy Bays */}
             <div className="mt-12 grid gap-8 xl:grid-cols-[1fr_1fr]">
               <div>
                 <Subhead
                   trailing={
                     <span className="text-[10px] text-muted-foreground">
-                      All 19 retained · squad, not XI
+                      All 19 retained · locked roster
                     </span>
                   }
                 >
@@ -1040,13 +1306,13 @@ export function SquadPage() {
                 <Subhead
                   trailing={
                     <span className="text-[10px] text-royal-pink">
-                      {6 - chosenTargets.length} unfilled places
+                      {squadValidation.vacanciesRemaining} unfilled places
                     </span>
                   }
                 >
                   Vacant squad places
                 </Subhead>
-                <VacancyBays compact selectedPlayers={chosenTargets} />
+                <VacancyBays compact selectedPlayers={activeHypotheticalAcquisitions} />
                 <p className="mt-4 text-xs text-muted-foreground">
                   To fill all six spaces, at least three additions must be Indian: only three
                   additional overseas players fit the 8-player squad cap.
