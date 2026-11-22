@@ -49,8 +49,23 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
           This page didn't load
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          Something went wrong while rendering this page. You can try refreshing or head back home.
         </p>
+        {import.meta.env.DEV && (
+          <details open className="mt-5 rounded-lg border border-border bg-card p-3 text-left">
+            <summary className="cursor-pointer text-xs font-semibold text-foreground">
+              Developer diagnostic · local run
+            </summary>
+            <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+              Route: {router.state.location.pathname}
+            </p>
+            <pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap break-words text-[10px] leading-4 text-muted-foreground">
+              {error instanceof Error
+                ? `${error.name}: ${error.message}${error.stack ? `\n\n${error.stack}` : ""}`
+                : String(error)}
+            </pre>
+          </details>
+        )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -84,29 +99,34 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Royals War Room — IPL 2027" },
       {
         name: "description",
-        content: "Rajasthan Royals squad and auction decision-support snapshot.",
+        content:
+          "Rajasthan Royals auction research, squad planning, IPL-only pressure rankings and Kadamba spatial research.",
       },
-      { name: "author", content: "Lovable" },
+      { name: "author", content: "Srish Bansal" },
       { property: "og:title", content: "Royals War Room — IPL 2027" },
       {
         property: "og:description",
-        content: "Rajasthan Royals squad and auction decision-support snapshot.",
+        content:
+          "Rajasthan Royals auction research, squad planning, IPL-only pressure rankings and Kadamba spatial research.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      {
+        rel: "icon",
+        href: "https://www.rajasthanroyals.com/static-assets/images/cssimages/static/rr-new.png?v=7.96",
+        type: "image/png",
+      },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap",
       },
     ],
   }),

@@ -1,0 +1,57 @@
+{
+  "snapshotDate": "2026-11-21",
+  "season": 2027,
+  "auctionDate": "2026-12-16",
+  "auctionTime": "11:00 AM IST",
+  "auctionVenue": "ITC Grand Goa, Goa",
+  "franchise": "Rajasthan Royals",
+  "purseCrore": 27.05,
+  "retainedPlayers": 19,
+  "maxSquadSize": 25,
+  "squadPlacesAvailable": 6,
+  "retainedOverseasPlayers": 5,
+  "maxOverseasSquadPlayers": 8,
+  "additionalOverseasPlaces": 3,
+  "maxOverseasInPlayingXI": 4,
+  "registrationStatus": "UNVERIFIED",
+  "registrationNote": "The official IPL 2027 Released Player List is now published and has been used to reconcile the release status of researched names. The separate official 2027 “To Be Auctioned” page was checked on 21 November 2026 and returned no player rows. A released player is not automatically auction-registered; researched candidates remain provisional until individually matched against the official auction list.",
+  "priceModelStatus": "NOT_AVAILABLE",
+  "priceModelNote": "No calibrated 2027 player-price model or comparable candidate-level price dataset is included. Planned bids are manual scenario assumptions used for purse arithmetic only. No walk-away price is calculated. Historical salary or auction prices are not projected forward.",
+  "sources": [
+    {
+      "name": "TATA IPL 2027 — Released Player List",
+      "url": "https://www.iplt20.com/cms/files/jot2qw8s50z1/3gFAJ4z1USxcXYhaZVl65L/2a463a9c02a5bb7fd12fa3fbe91cc299/TATA_IPL_2027-_Release_Player_List.pdf",
+      "publishedDate": null,
+      "retrievedDate": "2026-11-21",
+      "supports": "Official franchise-specific released-player list. The adjacent salary column is prior contract salary in lakhs, not an auction base price, predicted clearing price or 2027 bid guidance."
+    },
+    {
+      "name": "TATA IPL 2027 Player Retentions announced",
+      "url": "https://www.iplt20.com/news/article/tata-ipl-2027-player-retentions-announced",
+      "publishedDate": "2026-11-18",
+      "retrievedDate": "2026-11-21",
+      "supports": "RR retained 19 players, five overseas players, six open places, three additional overseas places and ₹27.05 crore available; official auction date/time and venue."
+    },
+    {
+      "name": "TATA IPL 2027 Auction — Teams",
+      "url": "https://www.iplt20.com/auction/2027/teams",
+      "publishedDate": null,
+      "retrievedDate": "2026-11-21",
+      "supports": "Official team purse and retained-squad snapshot."
+    },
+    {
+      "name": "TATA IPL 2027 Auction — To Be Auctioned",
+      "url": "https://www.iplt20.com/auction/2027/to-be-auctioned",
+      "publishedDate": null,
+      "retrievedDate": "2026-11-21",
+      "supports": "Official candidate-list endpoint; no player rows were returned at retrieval, so registration is not inferred."
+    },
+    {
+      "name": "IPL Governing Council — Player Regulations 2025–27",
+      "url": "https://www.iplt20.com/news/article/ipl-governing-council-announces-tata-ipl-player-regulations-2025-27",
+      "publishedDate": "2024-09-28",
+      "retrievedDate": "2026-11-21",
+      "supports": "2025–27 regulatory framework and continuation of the Impact Player regulation."
+    }
+  ]
+}

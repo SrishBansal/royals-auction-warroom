@@ -1,0 +1,26 @@
+{
+  "sourceSha256": "a3926f49d2c684dca2a5d2de535a02c5ee46ea654ca1e79dd31c69e7544e9889",
+  "iplMatches": 367,
+  "scheduledMatchRecords": 371,
+  "matchesWithoutDeliveryData": 4,
+  "deliveryRows": 87687,
+  "pressureLegalDeliveries": 27687,
+  "battersEligible": 86,
+  "bowlersEligible": 89,
+  "top10DistinctBatters": true,
+  "top10DistinctBowlers": true,
+  "splitHalf": {
+    "method": "Descriptive odd/even match_id split; same score formulas, lower per-half eligibility thresholds. Not a chronological holdout.",
+    "batterPlayersCompared": 81,
+    "batterSpearman": 0.099,
+    "bowlerPlayersCompared": 81,
+    "bowlerSpearman": 0.063,
+    "interpretation": "Low split-half agreement means rank order is sensitive to match sample. Treat ranks as exploratory, not definitive."
+  },
+  "notes": [
+    "IPL-only competitions selected by comp_name == IPL YYYY",
+    "T20I excluded",
+    "No economy or chase required-rate reconstruction",
+    "Pressure definition is phase/wicket-stress proxy"
+  ]
+}

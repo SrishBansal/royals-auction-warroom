@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": [],
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "baseUrl": ".",
+    "paths": {"@/*": ["src/*"]}
+  },
+  "include": [
+    "src/domain/historical-impact.ts",
+    "src/domain/rr-decision-engine.ts",
+    "src/domain/decision-data.ts",
+    "src/domain/recruitment.ts",
+    "src/data/war-room.ts",
+    "src/data/season-review.ts",
+    "src/data/playoff-review.ts",
+    "src/data/spatial/spatial-model-pilot.json",
+    "src/data/rr-2027-data.json",
+    "src/data/historical-impact-model.json"
+  ]
+}

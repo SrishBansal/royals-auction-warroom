@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SquadPage } from "@/components/pages";
+import { SquadWorkbenchPage } from "@/components/squad-workbench";
 
 export const Route = createFileRoute("/squad")({
   head: () => ({
@@ -13,12 +13,11 @@ export const Route = createFileRoute("/squad")({
       { property: "og:title", content: "Working XI & Squad Builder | Royals War Room" },
       {
         property: "og:description",
-        content:
-          "Horses-for-courses proposed XIs, squad arithmetic and editable tactical scenarios.",
+        content: "Match-specific proposed XIs, squad arithmetic and editable tactical scenarios.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: SquadPage,
+  component: SquadWorkbenchPage,
 });

@@ -1,8 +1,17 @@
-import { warRoomData } from "@/data/war-room";
-import { type MarketStatus, type MedicalRestriction } from "./market-eligibility";
+export type MarketStatus =
+  | "RR_RETAINED"
+  | "RETAINED_OTHER_FRANCHISE"
+  | "RELEASED_REGISTRATION_UNVERIFIED"
+  | "AUCTION_REGISTERED"
+  | "UNAVAILABLE"
+  | "INELIGIBLE_MARKET"
+  | "MARKET_STATUS_UNRESOLVED";
+
+export type MedicalRestriction = "NONE" | "MEDICAL_REVIEW";
 
 export type BattingRole =
   | "MIDDLE_ORDER_ANCHOR"
+  | "TOP_ORDER_COVER"
   | "LOWER_MIDDLE_ORDER_FINISHER"
   | "FLOATER"
   | "WICKETKEEPER_BATTER"
@@ -20,19 +29,13 @@ export type BowlingRole =
   | "EXPRESS_PACE"
   | "SPIN_MATCHUP";
 
-export type PressureStatus =
-  "ELIGIBLE_P1_ARCHIVE" | "PROVISIONAL_LOW_SAMPLE" | "P1_NOT_AVAILABLE_IN_ARCHIVE";
+export type PressureStatus = "ESTIMATE_AVAILABLE" | "LOW_SAMPLE" | "NO_ESTIMATE";
 
 export interface PressureEvidence {
   status: PressureStatus;
-  p1Rank?: number | undefined;
   postMeanPer100?: number | undefined;
   lo90Per100?: number | undefined;
   hi90Per100?: number | undefined;
-  pTop10?: number | undefined;
-  rankLo5?: number | undefined;
-  rankHi95?: number | undefined;
-  tier?: string | undefined;
   gatedBalls?: number | undefined;
   gatedMatches?: number | undefined;
   iplShareOfGated?: number | undefined;
@@ -43,6 +46,7 @@ export interface PressureEvidence {
 export interface RecruitmentCandidate {
   id: string;
   name: string;
+  /** Analyst-curated display order only; not a model score or recommendation probability. */
   rank: number;
   discipline: "BATTER" | "BOWLER";
   primaryRole: BattingRole | BowlingRole;
@@ -65,237 +69,6 @@ export interface RecruitmentCandidate {
   isProvisional: boolean;
 }
 
-export interface BenchmarkExclusion {
-  name: string;
-  globalP1Rank: number;
-  discipline: "BATTER" | "BOWLER";
-  currentFranchiseOrStatus: string;
-  exclusionReason: string;
-  pressureScorePer100: number;
-}
-
-export interface MiddleOrderTacticalVariation {
-  id: string;
-  title: string;
-  context: string;
-  battingOrderSlots4to8: Array<{
-    slotNumber: number;
-    player: string;
-    role: string;
-    matchupRationale: string;
-  }>;
-  keyTacticalAdvantage: string;
-  tradeOff: string;
-}
-
-export interface ImpactPlayerScenarioRecommendation {
-  id: string;
-  scenarioName: string;
-  matchContext: string;
-  recommendedPlayer: string;
-  playerRole: string;
-  substitutedStartingPlayer: string;
-  whyThisSubstitution: string;
-  battingBenefit: string;
-  bowlingBenefit: string;
-  overseasCountInXI: number;
-  squadEligibility: string;
-  medicalRestrictions: string;
-  mainDownside: string;
-}
-
-export interface TacticalScenarioLineup {
-  id: string;
-  name: string;
-  title: string;
-  purpose: string;
-  startingXI: string[];
-  overseasCount: number;
-  paceOptionsCount: number;
-  spinOptionsCount: number;
-  deathOversSpecialists: string[];
-  roleCoverageSummary: {
-    wicketkeepers: string[];
-    topOrder: string[];
-    middleOrder: string[];
-    finishers: string[];
-    spinners: string[];
-    seamers: string[];
-  };
-  benchDisplacement: {
-    displacedRetained: string[];
-    startingRetainedCount: number;
-    startingAdditionsCount: number;
-  };
-  impactPlayerAlternatives: string[];
-  actualVsHypothetical: {
-    retainedCount: number;
-    hypotheticalAdditions: string[];
-  };
-}
-
-/**
- * ============================================================================
- * PART 1 & 5: GLOBAL P1 BENCHMARK EXCLUSIONS
- * Demonstrates why global P1 leaders CANNOT occupy RR auction recruitment spots.
- * ============================================================================
- */
-export const BENCHMARK_EXCLUSIONS: BenchmarkExclusion[] = [
-  {
-    name: "Jasprit Bumrah",
-    globalP1Rank: 1,
-    discipline: "BOWLER",
-    currentFranchiseOrStatus: "Mumbai Indians (Retained)",
-    exclusionReason:
-      "Retained by MI for IPL 2027; legally unavailable and not in the auction market.",
-    pressureScorePer100: -19.32,
-  },
-  {
-    name: "Yashasvi Jaiswal",
-    globalP1Rank: 2,
-    discipline: "BATTER",
-    currentFranchiseOrStatus: "Rajasthan Royals (Retained)",
-    exclusionReason:
-      "Already retained by Rajasthan Royals; core locked asset, cannot be re-acquired at auction.",
-    pressureScorePer100: +26.68,
-  },
-  {
-    name: "Tim David",
-    globalP1Rank: 1,
-    discipline: "BATTER",
-    currentFranchiseOrStatus: "Royal Challengers Bengaluru (Retained)",
-    exclusionReason: "Retained by RCB for IPL 2027; cannot be recruited at auction.",
-    pressureScorePer100: +27.97,
-  },
-  {
-    name: "Abhishek Sharma",
-    globalP1Rank: 3,
-    discipline: "BATTER",
-    currentFranchiseOrStatus: "Sunrisers Hyderabad (Retained)",
-    exclusionReason:
-      "Retained by SRH; not in auction pool. Status unresolved in historical benchmark.",
-    pressureScorePer100: +23.94,
-  },
-  {
-    name: "Suryakumar Yadav",
-    globalP1Rank: 4,
-    discipline: "BATTER",
-    currentFranchiseOrStatus: "Mumbai Indians (Retained)",
-    exclusionReason: "Retained by MI; contractually locked, unavailable for auction recruitment.",
-    pressureScorePer100: +23.67,
-  },
-  {
-    name: "Nicholas Pooran",
-    globalP1Rank: 5,
-    discipline: "BATTER",
-    currentFranchiseOrStatus: "Lucknow Super Giants (Retained)",
-    exclusionReason: "Retained by LSG for ₹21 Cr; unavailable for auction recruitment.",
-    pressureScorePer100: +17.97,
-  },
-  {
-    name: "Phil Salt",
-    globalP1Rank: 6,
-    discipline: "BATTER",
-    currentFranchiseOrStatus: "Royal Challengers Bengaluru (Retained)",
-    exclusionReason: "Retained by RCB; contractually unavailable for auction acquisition.",
-    pressureScorePer100: +17.38,
-  },
-  {
-    name: "Haris Rauf",
-    globalP1Rank: 3,
-    discipline: "BOWLER",
-    currentFranchiseOrStatus: "Unresolved / T20I Only",
-    exclusionReason:
-      "0% IPL share in pressure sample; Pakistan national player not participating in IPL auction.",
-    pressureScorePer100: -10.62,
-  },
-  {
-    name: "Sunil Narine",
-    globalP1Rank: 6,
-    discipline: "BOWLER",
-    currentFranchiseOrStatus: "Kolkata Knight Riders (Retained)",
-    exclusionReason: "Retained by KKR; contractually locked, unavailable for auction recruitment.",
-    pressureScorePer100: -7.25,
-  },
-  {
-    name: "Lungi Ngidi",
-    globalP1Rank: 7,
-    discipline: "BOWLER",
-    currentFranchiseOrStatus: "Delhi Capitals (Retained)",
-    exclusionReason: "Retained by DC; contractually unavailable for auction acquisition.",
-    pressureScorePer100: -7.03,
-  },
-  {
-    name: "Bhuvneshwar Kumar",
-    globalP1Rank: 9,
-    discipline: "BOWLER",
-    currentFranchiseOrStatus: "Royal Challengers Bengaluru (Retained)",
-    exclusionReason: "Retained by RCB; contractually unavailable for auction acquisition.",
-    pressureScorePer100: -6.78,
-  },
-  {
-    name: "Shaheen Afridi",
-    globalP1Rank: 10,
-    discipline: "BOWLER",
-    currentFranchiseOrStatus: "Unresolved / T20I Only",
-    exclusionReason: "0% IPL share in pressure sample; non-participant in IPL auction.",
-    pressureScorePer100: -5.97,
-  },
-  {
-    name: "Jacob Bethell",
-    globalP1Rank: 999,
-    discipline: "BATTER",
-    currentFranchiseOrStatus: "Royal Challengers Bengaluru (Released)",
-    exclusionReason:
-      "Confirmed unavailable for IPL 2027 following right-knee surgery setback (ICC/RCB bulletins). Hard exclusion.",
-    pressureScorePer100: 0,
-  },
-  {
-    name: "Mitchell Starc",
-    globalP1Rank: 999,
-    discipline: "BOWLER",
-    currentFranchiseOrStatus: "Delhi Capitals (Released)",
-    exclusionReason:
-      "Reported workload opt-out for IPL 2027 due to Australian international schedule. Excluded from actionable targets.",
-    pressureScorePer100: 0,
-  },
-  {
-    name: "MS Dhoni",
-    globalP1Rank: 999,
-    discipline: "BATTER",
-    currentFranchiseOrStatus: "Chennai Super Kings (Retired)",
-    exclusionReason:
-      "Retired from active IPL playing to assume CSK mentor role. Ineligible for auction recruitment.",
-    pressureScorePer100: 0,
-  },
-  {
-    name: "Andre Russell",
-    globalP1Rank: 8,
-    discipline: "BATTER",
-    currentFranchiseOrStatus: "Retired / Mentor Transition",
-    exclusionReason: "Historical P1 benchmark only; inactive in competitive auction market.",
-    pressureScorePer100: +17.32,
-  },
-  {
-    name: "Tushar Deshpande",
-    globalP1Rank: 999,
-    discipline: "BOWLER",
-    currentFranchiseOrStatus: "Rajasthan Royals (Released)",
-    exclusionReason:
-      "Explicitly excluded by competition mandate; release indicates tactical departure from RR plans.",
-    pressureScorePer100: 0,
-  },
-  {
-    name: "M Shahrukh Khan",
-    globalP1Rank: 64,
-    discipline: "BATTER",
-    currentFranchiseOrStatus: "Gujarat Titans (Released)",
-    exclusionReason:
-      "Explicitly excluded by competition mandate; redundant No.6–7 profile overlaps with retained Donovan Ferreira.",
-    pressureScorePer100: -0.12,
-  },
-];
-
 /**
  * ============================================================================
  * PART 3: RR-SPECIFIC BATTER RECRUITMENT BOARD (EXACTLY 10 CANDIDATES)
@@ -317,13 +90,13 @@ export const RR_BATTER_RECOMMENDATIONS: RecruitmentCandidate[] = [
     marketStatusLabel: "Released by PBKS · Registration unverified",
     medicalRestriction: "NONE",
     whyRR:
-      "Direct structural fix for RR's critical missing link: an Indian left-handed middle-order buffer at No.5 between Jurel (No.4) and Ferreira/Jadeja (Nos.6–7). Prevents the middle-over spin squeeze that eliminated RR in the 2024 Qualifier 2.",
+      "The clearest Indian No.5 role fit in this candidate pool. The report identifies the need for a middle-order option who can repair an innings and rotate against spin after RR's middle-over wicket clusters.",
     roleFit:
       "Median batting position 5.0 across 36 IPL matches; 538 legal deliveries, 1.396 runs/ball (SR 139.6), 36.99% dot balls. Natural left-hand innings-repairer who can float between Nos. 4 and 6 depending on game situation.",
     pressureEvidence: {
-      status: "PROVISIONAL_LOW_SAMPLE",
+      status: "LOW_SAMPLE",
       exposureNote:
-        "59 pressure-gated deliveries (below 100-ball P1 eligibility threshold). Classified as PROVISIONAL low-sample candidate; recommended on tactical role-fit rather than P1 model proof.",
+        "59 pressure-gated deliveries (below 100-ball minimum pressure-sample threshold). Classified as low-sample candidate; recommended on tactical role-fit rather than pressure-model evidence.",
       scoutingMetrics: {
         matches: 36,
         legalBalls: 538,
@@ -334,131 +107,54 @@ export const RR_BATTER_RECOMMENDATIONS: RecruitmentCandidate[] = [
       },
     },
     upgradeOverSquad:
-      "Provides a dedicated left-handed middle-order anchor/floater, relieving Shubham Dubey from carrying the entire domestic middle-order burden and allowing Donovan Ferreira to enter in his optimal death-overs power window.",
+      "Would add a natural Indian No.5 option and give RR another way to structure the flexible 4–8 block. The report does not establish a guaranteed batting-order slot or a predicted improvement.",
     watchOut:
-      "IPL 2026 production slumped noticeably compared to 2025; pressure sample is below the 100-ball P1 threshold and he will command heavy bidding from multiple franchises seeking Indian LHB middle-order options.",
+      "The 2026 dip is material. His 59 pressure-gated balls in 12 matches remain below the 100-ball minimum pressure-exposure requirement; auction demand and price are not modelled.",
     tacticalRolesSupported: ["Stabilizer", "Left-handed spin disruptor", "Pace-hitting floater"],
     isProvisional: true,
   },
   {
     id: "rr-bat-02",
-    name: "Abishek Porel",
+    name: "Mitch Owen",
     rank: 2,
     discipline: "BATTER",
-    primaryRole: "WICKETKEEPER_BATTER",
-    secondaryRole: "FLOATER",
-    nationality: "Indian",
-    country: "India",
-    battingHand: "Left",
-    teamReleasedFrom: "Delhi Capitals",
+    primaryRole: "LOWER_MIDDLE_ORDER_FINISHER",
+    secondaryRole: "BATTING_ALL_ROUNDER",
+    nationality: "Overseas",
+    country: "Australia",
+    teamReleasedFrom: "Punjab Kings",
     marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by DC · Registration unverified",
+    marketStatusLabel: "Released by PBKS · Registration unverified",
     medicalRestriction: "NONE",
     whyRR:
-      "Provides high-impact domestic wicketkeeping cover behind Dhruv Jurel while functioning as a dynamic left-handed batting floater. Securing Porel eliminates the need to spend an overseas XI slot on backup keeper Lhuan-dre Pretorius.",
+      "Among the overseas candidates in this board, Owen has the most direct lower-middle-order power profile for positions 6–8. He is worth testing against Ferreira, Dubey and Shanaka rather than treating another top-order batter as the answer to the finishing role.",
     roleFit:
-      "Versatile left-handed wicketkeeper-batter who excelled for DC with an aggressive strike rate (>150) in powerplay and middle overs. Capable of floating between opening and No.5 or entering as a specialist batting Impact Player.",
+      "BBL 2024–25: 452 runs at a strike rate of 203.60. BBL 2025–26: 166 runs from 85 balls at 195.29, including 13 sixes. These are external T20 scouting figures, not IPL/T20I pressure evidence.",
     pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
+      status: "NO_ESTIMATE",
       exposureNote:
-        "P1 score not available in archived dataset. Evaluated on verified IPL descriptive sample (28 matches, 500+ runs, SR 152.4).",
+        "No formal IPL/T20I pressure estimate is available in the supplied candidate evidence. BBL figures are separate scouting context and are not converted into a pressure score.",
       scoutingMetrics: {
-        matches: 28,
-        iplStrikeRate: 152.4,
-        primaryPositions: "1–4 (Upper order) / Floater",
-        keepingDismissals: 14,
+        "BBL 2024–25 runs": 452,
+        "BBL 2024–25 strike rate": 203.6,
+        "BBL 2025–26 runs": 166,
+        "BBL 2025–26 balls": 85,
+        "BBL 2025–26 strike rate": 195.29,
+        "BBL 2025–26 average": 15.09,
+        "BBL 2025–26 sixes": 13,
       },
     },
     upgradeOverSquad:
-      "Offers domestic left-handed batting flexibility and specialist wicketkeeping, allowing RR to field Jurel as a pure batter when workload demands without compromising overseas balance.",
+      "Offers a more direct overseas No.6/7 hitting profile if RR want to alter the balance around Ferreira, Dubey and Shanaka. His value depends on winning a place in the XI rather than simply adding another overseas name.",
     watchOut:
-      "Historical IPL sample is concentrated in the top order (Nos. 1–3); he is NOT a proven death-overs power-hitter and must not be cast as a No.6–7 specialist finisher.",
-    tacticalRolesSupported: [
-      "Wicketkeeper/cover option",
-      "Left-handed spin disruptor",
-      "Pace-hitting floater",
-    ],
+      "His 2025–26 BBL average was 15.09 and he has no meaningful IPL batting sample. A high BBL strike rate is not proof of IPL pressure reliability; an overseas XI place is a real opportunity cost.",
+    tacticalRolesSupported: ["Boundary-hitting finisher", "Batting all-rounder"],
     isProvisional: true,
   },
   {
     id: "rr-bat-03",
-    name: "Nitish Rana",
-    rank: 3,
-    discipline: "BATTER",
-    primaryRole: "MIDDLE_ORDER_ANCHOR",
-    secondaryRole: "FLOATER",
-    nationality: "Indian",
-    country: "India",
-    battingHand: "Left",
-    teamReleasedFrom: "Kolkata Knight Riders",
-    marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by KKR · Registration unverified",
-    medicalRestriction: "NONE",
-    whyRR:
-      "Experienced left-handed middle-order stabilizer who directly inoculates RR against top-order collapses (such as the 2022 Final). Offers proven boundary hitting against spin through overs 7–15 and handy off-spin bowling against left-handers.",
-    roleFit:
-      "Proven IPL record across 107 matches (>2,600 runs, SR 135.2, 18 fifties). Operates effectively at Nos. 3–5 to absorb pressure, anchor partnerships, and counter left-arm orthodox or leg-spin.",
-    pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
-      exposureNote:
-        "P1 score not available in archived top-10 dataset. Supported by extensive 10-year IPL track record in high-leverage playoff environments.",
-      scoutingMetrics: {
-        matches: 107,
-        careerRuns: 2636,
-        strikeRate: 135.2,
-        inningsAtNo3to5: "88%",
-      },
-    },
-    upgradeOverSquad:
-      "Brings seasoned tactical maturity and spin-hitting mastery that neither young Vaibhav Sooryavanshi nor Shubham Dubey currently possess in crunch playoff scenarios.",
-    watchOut:
-      "Not an explosive No.7 finisher; scoring rate drops against high-pace back-of-a-length bowling (>142 kph) in the death overs.",
-    tacticalRolesSupported: ["Stabilizer", "Left-handed spin disruptor", "Batting all-rounder"],
-    isProvisional: true,
-  },
-  {
-    id: "rr-bat-04",
-    name: "Mahipal Lomror",
-    rank: 4,
-    discipline: "BATTER",
-    primaryRole: "BATTING_ALL_ROUNDER",
-    secondaryRole: "LOWER_MIDDLE_ORDER_FINISHER",
-    nationality: "Indian",
-    country: "India",
-    battingHand: "Left",
-    teamReleasedFrom: "Royal Challengers Bengaluru",
-    marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by RCB · Registration unverified",
-    medicalRestriction: "NONE",
-    whyRR:
-      "Former Royal who knows Sawai Mansingh Stadium intimately. Provides explosive middle-overs boundary hitting against spin combined with useful left-arm orthodox spin, providing local conditions mastery and Impact Player punch.",
-    roleFit:
-      "Middle-order power-hitter capable of striking at 170+ against spin in overs 9–16. Best deployed between Nos. 5 and 7 to disrupt opposition spin plans.",
-    pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
-      exposureNote:
-        "P1 score not available in archive. Evaluated through 40 IPL matches with RCB/RR, demonstrating rapid boundary cameos against spin.",
-      scoutingMetrics: {
-        matches: 40,
-        strikeRateVsSpin: 158.6,
-        overallStrikeRate: 141.2,
-      },
-    },
-    upgradeOverSquad:
-      "Domestic left-handed alternative who offers secondary spin cover for Ravindra Jadeja and provides cheaper tactical depth than overseas batting targets.",
-    watchOut:
-      "Prone to short-ball dismissals against express pace; finishing record in tight, high-required-rate run chases remains inconsistent.",
-    tacticalRolesSupported: [
-      "Left-handed spin disruptor",
-      "Boundary-hitting finisher",
-      "Batting all-rounder",
-    ],
-    isProvisional: true,
-  },
-  {
-    id: "rr-bat-05",
     name: "Shimron Hetmyer",
-    rank: 5,
+    rank: 3,
     discipline: "BATTER",
     primaryRole: "OVERSEAS_POWER_HITTER",
     secondaryRole: "LOWER_MIDDLE_ORDER_FINISHER",
@@ -470,66 +166,139 @@ export const RR_BATTER_RECOMMENDATIONS: RecruitmentCandidate[] = [
     marketStatusLabel: "Released by RR · Registration unverified",
     medicalRestriction: "NONE",
     whyRR:
-      "Direct historical buyback candidate who understands RR's death-hitting philosophy. Proven death-overs boundary pedigree (322 legal death balls in IPL, 1.863 runs/ball).",
+      "The most direct established overseas No.6 comparison in this shortlist. His supplied death-overs role sample is more relevant to RR's lower-middle-order question than Breetzke's top-order profile.",
     roleFit:
-      "Specialist No.6 power finisher. Median batting position 6.0; lethal boundary accelerator against pace and spin in overs 16–20.",
+      "Natural No.6 profile. The supplied IPL sample covers 694 legal balls in 56 matches, with a median position of 6; 407 death balls produced 695 batter runs.",
     pressureEvidence: {
-      status: "ELIGIBLE_P1_ARCHIVE",
-      p1Rank: 72,
-      postMeanPer100: -0.06,
-      pTop10: 0.006,
-      gatedBalls: 251,
-      gatedMatches: 36,
-      iplShareOfGated: 0.81,
+      status: "ESTIMATE_AVAILABLE",
+      postMeanPer100: 4.74,
       exposureNote:
-        "Archived P1 Rank 72. Evaluated in full model with 251 gated deliveries across 36 matches. Below top-tier pressure ranking, but possesses elite IPL-specific death volume.",
+        "The supplied estimate is +4.74 batter runs above expectation per 100 pressure-gated legal balls. Read it with its exposure and uncertainty; it is evidence, not a recruitment score.",
       scoutingMetrics: {
-        p1Rank: 72,
-        deathLegalBalls: 322,
-        deathRunsPerBall: 1.863,
-        medianPosition: 6.0,
+        deathLegalBalls: 407,
+        deathBatterRuns: 695,
+        medianPosition: 6,
       },
     },
     upgradeOverSquad:
-      "Established match-winning pedigree for Rajasthan; provides an overseas contingency if Ferreira suffers an injury or form slump.",
+      "Adds value only if RR specifically want an established overseas left-hand No.6 in the selected XI. Otherwise his role overlaps Ferreira, Dubey and Shanaka, while using an overseas slot that could go to a specialist bowler.",
     watchOut:
       "Consumes an overseas XI slot. Because RR already retains Donovan Ferreira as primary overseas finisher, signing Hetmyer restricts overseas bowling combinations (Archer + Pathirana/Boult/Burger).",
     tacticalRolesSupported: ["Boundary-hitting finisher", "Left-handed spin disruptor"],
     isProvisional: false,
   },
   {
+    id: "rr-bat-04",
+    name: "Matthew Breetzke",
+    rank: 4,
+    discipline: "BATTER",
+    primaryRole: "TOP_ORDER_COVER",
+    secondaryRole: "FLOATER",
+    nationality: "Overseas",
+    country: "South Africa",
+    teamReleasedFrom: "Lucknow Super Giants",
+    marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
+    marketStatusLabel: "Released by LSG · Registration unverified",
+    medicalRestriction: "NONE",
+    whyRR:
+      "An overseas top/upper-middle-order option only if RR deliberately want to change the top-order balance or add cover above the finishers.",
+    roleFit:
+      "Natural top/upper-middle-order profile. This is not a specialist No.5–8 finishing role; use him earlier if the selected combination calls for it.",
+    pressureEvidence: {
+      status: "NO_ESTIMATE",
+      exposureNote:
+        "No formal pressure estimate appears in the submitted output. The report does not provide a comparable pressure metric for this profile.",
+    },
+    upgradeOverSquad:
+      "Quality top/upper-middle-order option if RR decide to alter the top-order balance or want cover above the finishers. His value must be judged against the retained Vaibhav/Jaiswal/Parag combination.",
+    watchOut:
+      "Natural role overlaps Vaibhav and Jaiswal and uses an overseas slot. He does not directly solve RR's main No.5–8 requirement.",
+    tacticalRolesSupported: ["Stabilizer", "Pace-hitting floater"],
+    isProvisional: true,
+  },
+  {
+    id: "rr-bat-05",
+    name: "Nitish Rana",
+    rank: 5,
+    discipline: "BATTER",
+    primaryRole: "MIDDLE_ORDER_ANCHOR",
+    secondaryRole: "FLOATER",
+    nationality: "Indian",
+    country: "India",
+    battingHand: "Left",
+    teamReleasedFrom: "Kolkata Knight Riders",
+    marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
+    marketStatusLabel: "Released by KKR · Registration unverified",
+    medicalRestriction: "NONE",
+    whyRR:
+      "Offers a larger IPL sample and a credible innings-repair role if RR lose early wickets. The report positions him more naturally at No.4/5 than as a specialist No.6/7 finisher.",
+    roleFit:
+      "Supplied IPL sample: 857 legal balls across 50 matches, median batting position 4; 526 middle-over balls for 776 runs. More naturally a No.4/5 stabiliser than a specialist No.6/7 finisher.",
+    pressureEvidence: {
+      status: "ESTIMATE_AVAILABLE",
+      postMeanPer100: 4.03,
+      exposureNote:
+        "The supplied estimate is +4.03 batter runs above expectation per 100 pressure-gated legal balls. The candidate record does not expose the full interval or exposure details.",
+      scoutingMetrics: {
+        iplLegalBalls: 857,
+        iplMatches: 50,
+        medianBattingPosition: 4,
+        middleOverBalls: 526,
+        middleOverRuns: 776,
+        season2025: "217 from 134 (SR 161.94)",
+        season2026: "225 from 149 (SR 151.01)",
+      },
+    },
+    upgradeOverSquad:
+      "Would add a more established No.4/5 batting option, but overlaps with Parag and Jurel. The case is sustained IPL role evidence, not a claim of guaranteed playoff performance.",
+    watchOut:
+      "More naturally a No.4/5 stabiliser than a specialist No.6/7 finisher; role overlap with Parag/Jurel is the main selection trade-off.",
+    tacticalRolesSupported: ["Stabilizer", "Left-handed spin disruptor", "Batting all-rounder"],
+    isProvisional: true,
+  },
+  {
     id: "rr-bat-06",
-    name: "Robin Minz",
+    name: "Mahipal Lomror",
     rank: 6,
     discipline: "BATTER",
-    primaryRole: "WICKETKEEPER_BATTER",
+    primaryRole: "BATTING_ALL_ROUNDER",
     secondaryRole: "LOWER_MIDDLE_ORDER_FINISHER",
     nationality: "Indian",
     country: "India",
     battingHand: "Left",
-    teamReleasedFrom: "Gujarat Titans",
+    teamReleasedFrom: "Mumbai Indians",
     marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by GT · Registration unverified",
+    marketStatusLabel:
+      "Released by MI · registration unverified (official PDF spells surname Lamror)",
     medicalRestriction: "NONE",
     whyRR:
-      "Exceptional high-ceiling domestic talent: a left-handed wicketkeeper-finisher with enormous natural bat speed. Provides long-term domestic power-hitting depth at low auction expenditure.",
+      "Previously represented RR and can be assessed as an Indian No.5/6 option with secondary slow left-arm spin. His role is closer to the need than another top-order batter, but the sample is limited.",
     roleFit:
-      "Natural lower-middle-order finisher (Nos. 6–7) who can clear boundary ropes from Ball 1 and serve as domestic backup wicketkeeper.",
+      "Supplied IPL sample: 221 legal balls across 25 matches for 345 runs, with a median batting position of 5. Middle overs: 108 balls / 169 runs; death: 100 balls / 167 runs.",
     pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
+      status: "NO_ESTIMATE",
       exposureNote:
-        "P1 score not available in archive. Scouting assessment based on domestic power trials and state-level T20 strike rates (>165).",
+        "No formal pressure estimate is available in the supplied candidate evidence. The IPL role sample is described separately.",
       scoutingMetrics: {
-        profile: "Domestic LHB Wicketkeeper-Finisher",
-        powerProfile: "Raw bat-speed outlier",
-        ageProfile: "Developmental / Long-term",
+        iplLegalBalls: 221,
+        iplMatches: 25,
+        iplRuns: 345,
+        medianBattingPosition: 5,
+        middleOverBalls: 108,
+        middleOverRuns: 169,
+        deathBalls: 100,
+        deathRuns: 167,
       },
     },
     upgradeOverSquad:
-      "Adds high-velocity left-handed domestic power without consuming an overseas slot or creating positional friction with Dhruv Jurel. Evaluated alongside international power candidates like Mitch Owen and Michael Bracewell, but Minz represents domestic wicketkeeper-finisher value without burning an overseas XI slot.",
+      "Would add Indian No.5/6 batting depth without using an overseas slot. Do not count the secondary spin as a major upgrade when Jadeja and Siddharth are already retained.",
     watchOut:
-      "Zero senior IPL match caps; unproven against international express pace and elite death-overs yorkers.",
-    tacticalRolesSupported: ["Wicketkeeper/cover option", "Boundary-hitting finisher"],
+      "Career average is modest and the sample is limited. The official 2027 released-player PDF lists him under MI with the spelling ‘Mahipal Lamror’; the official IPL player profile uses ‘Mahipal Lomror’. Registration remains unverified. Do not target him primarily for spin when Jadeja and Siddharth are already retained.",
+    tacticalRolesSupported: [
+      "Left-handed spin disruptor",
+      "Boundary-hitting finisher",
+      "Batting all-rounder",
+    ],
     isProvisional: true,
   },
   {
@@ -541,140 +310,141 @@ export const RR_BATTER_RECOMMENDATIONS: RecruitmentCandidate[] = [
     secondaryRole: "FLOATER",
     nationality: "Overseas",
     country: "Sri Lanka",
-    battingHand: "Left",
-    teamReleasedFrom: "Sri Lanka / International Pool",
+    teamReleasedFrom: "Sunrisers Hyderabad",
     marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "International entrant · Registration unverified",
+    marketStatusLabel: "Released by SRH · Registration unverified",
     medicalRestriction: "NONE",
     whyRR:
-      "Extraordinary ambidextrous tactical weapon: bats in the middle order with classical composure, while bowling right-arm off-spin to left-handers and left-arm orthodox to right-handers. Gives RR complete matchup dominance.",
+      "A middle-order option with secondary spin utility. The submitted report values combination flexibility, not a claim that he is a proven death hitter or that handedness guarantees a matchup advantage.",
     roleFit:
-      "Dynamic middle-order floater (Nos. 4–6) with elite temperament under pressure across international cricket (ICC breakout performer 2024–2026).",
+      "The report identifies a possible No.5/6 batting all-rounder. His supplied 2025 IPL sample is 92 runs in five matches; the small IPL exposure limits the conclusion.",
     pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
+      status: "NO_ESTIMATE",
       exposureNote:
-        "P1 score not available in IPL archive. International sample shows extraordinary Test/T20 conversion and poise under scoreboard pressure.",
-      scoutingMetrics: {
-        internationalAverage: "50+ across formats",
-        bowlingVersatility: "Ambidextrous spin (Off-spin + SLA)",
-        fieldingRating: "Elite 30-yard fielder",
-      },
+        "No formal pressure estimate is available in the supplied candidate evidence. The 2025 IPL sample is 92 runs in five matches; the supplied T20I profile is separate.",
+      scoutingMetrics: { ipl2025Runs: 92, ipl2025Matches: 5 },
     },
     upgradeOverSquad:
-      "Unmatched tactical flexibility: allows RR to play a single player who solves both middle-order batting stability and opposing-hand spin matchups.",
+      "Could offer a middle-order batting option with secondary spin. The report does not establish a unique matchup advantage; compare his overseas cost against Shanaka, Ferreira and Jadeja.",
     watchOut:
-      "Zero prior IPL tournament experience; consumes 1 of only 4 available overseas XI slots.",
+      "Limited IPL exposure and no evidence of consistent high-impact death hitting. He must displace an overseas role and be compared with Shanaka, Ferreira and Jadeja.",
     tacticalRolesSupported: [
-      "Stabilizer",
-      "Left-handed spin disruptor",
+      "Middle-order flexibility",
+      "Secondary spin option",
       "Batting all-rounder",
-      "Pace-hitting floater",
     ],
     isProvisional: true,
   },
   {
     id: "rr-bat-08",
-    name: "Aman Khan",
+    name: "Abishek Porel",
     rank: 8,
     discipline: "BATTER",
-    primaryRole: "LOWER_MIDDLE_ORDER_FINISHER",
-    secondaryRole: "BATTING_ALL_ROUNDER",
-    nationality: "Indian",
-    country: "India",
-    battingHand: "Right",
-    teamReleasedFrom: "Chennai Super Kings",
-    marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by CSK · Registration unverified",
-    medicalRestriction: "NONE",
-    whyRR:
-      "Tall, imposing Indian power-hitter who can strike pace straight down the ground at Nos. 6–7 and bowl 1–2 overs of medium pace, reducing reliance on Dasun Shanaka's overseas slot.",
-    roleFit:
-      "Lower-order finisher with proven SMAT domestic power output and boundary cameos for KKR and DC.",
-    pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
-      exposureNote:
-        "P1 score not available in archive. Supported by domestic SMAT strike rate (158.4) and proven 50+ meter boundary clearance.",
-      scoutingMetrics: {
-        domesticT20Matches: 42,
-        domesticStrikeRate: 158.4,
-        iplInningsSample: 14,
-      },
-    },
-    upgradeOverSquad:
-      "Affordable Indian seam-bowling batter alternative who gives tactical bench depth behind Donovan Ferreira.",
-    watchOut:
-      "IPL output has been sporadic; vulnerability to sharp short-pitch bowling above chest height.",
-    tacticalRolesSupported: ["Boundary-hitting finisher", "Batting all-rounder"],
-    isProvisional: true,
-  },
-  {
-    id: "rr-bat-09",
-    name: "Vihaan Malhotra",
-    rank: 9,
-    discipline: "BATTER",
-    primaryRole: "DEVELOPMENTAL_BATTER",
+    primaryRole: "WICKETKEEPER_BATTER",
     secondaryRole: "FLOATER",
     nationality: "Indian",
     country: "India",
     battingHand: "Left",
-    teamReleasedFrom: "Royal Challengers Bengaluru",
+    teamReleasedFrom: "Delhi Capitals",
     marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by RCB · Registration unverified",
+    marketStatusLabel: "Released by DC · Registration unverified",
     medicalRestriction: "NONE",
     whyRR:
-      "Long-term blue-chip developmental asset: 2026 India U19 World Cup standout (109* vs Zimbabwe, 4/14 vs Bangladesh) and dominant SMAT form in Nov 2026 (86 off 50 vs Haryana). Perfect developmental peer for Vaibhav Sooryavanshi.",
+      "Offers Indian wicketkeeping cover and a flexible upper/middle-order option. RR already have Jurel, Pretorius and Ferreira as keeping options, so the signing must create a clear combination benefit.",
     roleFit:
-      "Left-handed top/middle-order batting floater with right-arm off-spin option. Ideal developmental squad player acquired at base price.",
+      "Supplied 2023–26 sample: 528 legal balls across 33 matches, median batting position 3. He has upper-order experience and can float, but the lower-order sample is limited.",
     pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
+      status: "NO_ESTIMATE",
       exposureNote:
-        "P1 score not available. High domestic/junior form: 256 runs off 143 balls (SR 179.02) in Sher-e-Punjab T20 and verified U19 WC pressure innings.",
+        "No formal pressure estimate. Supplied IPL descriptive sample: 528 legal balls across 33 matches; median batting position 3. Do not infer a pressure score.",
       scoutingMetrics: {
-        u19WorldCupHigh: "109* off 107 vs Zimbabwe",
-        u19WorldCupBowling: "4/14 vs Bangladesh",
-        smatNov2026Score: "86 off 50 balls",
+        iplLegalBalls: 528,
+        iplMatches: 33,
+        iplRuns: 769,
+        medianBattingPosition: 3,
+        deathLegalBalls: 35,
+        season2025: "301 runs at SR 146.83",
+        season2026: "108 runs at SR 122.73",
       },
     },
     upgradeOverSquad:
-      "Adds elite age-group pedigree and left-handed batting depth for the 2027–2030 cycle at negligible purse expenditure.",
+      "Adds domestic left-handed keeping and batting cover. The marginal value is a squad-combination option, not proof that he solves the No.5–8 finishing role.",
     watchOut:
-      "Raw youth; entirely unproven against senior international fast bowlers in high-stakes IPL atmospheres.",
-    tacticalRolesSupported: ["Stabilizer", "Left-handed spin disruptor", "Pace-hitting floater"],
+      "Primarily an upper-order batter (median position 3), with only 35 death legal balls in the supplied sample. He is not a proven No.5–8 power-hitter; RR already have Jurel, Pretorius and Ferreira as keeping options.",
+    tacticalRolesSupported: [
+      "Wicketkeeper/cover option",
+      "Left-handed spin disruptor",
+      "Pace-hitting floater",
+    ],
+    isProvisional: true,
+  },
+  {
+    id: "rr-bat-09",
+    name: "Robin Minz",
+    rank: 9,
+    discipline: "BATTER",
+    primaryRole: "WICKETKEEPER_BATTER",
+    secondaryRole: "LOWER_MIDDLE_ORDER_FINISHER",
+    nationality: "Indian",
+    country: "India",
+    teamReleasedFrom: "Mumbai Indians",
+    marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
+    marketStatusLabel: "Released by MI · Registration unverified",
+    medicalRestriction: "NONE",
+    whyRR:
+      "A developmental Indian keeper-batter who can be evaluated for lower-middle-order hitting, rather than treated as an established IPL finisher. It is a domestic development route that does not use an overseas slot.",
+    roleFit:
+      "Developmental Indian No.6/7 wicketkeeper-batter option. Domestic T20 sample: 245 runs from 158 balls at SR 155.06 in 22 matches; 2025 SMAT: 166 from 102 at SR 162.75.",
+    pressureEvidence: {
+      status: "NO_ESTIMATE",
+      exposureNote:
+        "No formal pressure estimate. Domestic T20 figures are scouting evidence only; IPL sample remains very small.",
+      scoutingMetrics: {
+        domesticT20Runs: 245,
+        domesticT20Balls: 158,
+        domesticT20StrikeRate: 155.06,
+        domesticT20Matches: 22,
+        smat2025Runs: 166,
+        smat2025Balls: 102,
+        iplRuns: 12,
+        iplBalls: 19,
+        iplAppearances: 4,
+      },
+    },
+    upgradeOverSquad:
+      "Could add a domestic development option at No.6/7 without consuming an overseas slot. His very small IPL sample means he should not displace an established retained batter on current evidence.",
+    watchOut:
+      "Only 12 IPL runs from 19 balls in four appearances. Domestic T20 hitting has not yet translated into a meaningful IPL sample or a formal pressure estimate.",
+    tacticalRolesSupported: ["Wicketkeeper/cover option", "Boundary-hitting finisher"],
     isProvisional: true,
   },
   {
     id: "rr-bat-10",
-    name: "Matthew Breetzke",
+    name: "Daryl Mitchell",
     rank: 10,
     discipline: "BATTER",
-    primaryRole: "OVERSEAS_POWER_HITTER",
-    secondaryRole: "MIDDLE_ORDER_ANCHOR",
+    primaryRole: "MIDDLE_ORDER_ANCHOR",
+    secondaryRole: "FLOATER",
     nationality: "Overseas",
-    country: "South Africa",
-    battingHand: "Right",
-    teamReleasedFrom: "Lucknow Super Giants",
-    marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by LSG · Registration unverified",
+    country: "New Zealand",
+    marketStatus: "MARKET_STATUS_UNRESOLVED",
+    marketStatusLabel: "Market route unconfirmed · research only",
     medicalRestriction: "NONE",
     whyRR:
-      "High-pace back-foot aggressor who has dominated SA20 cricket. Provides top/upper-middle-order insurance if Jaiswal, Vaibhav, or Parag suffer injuries.",
+      "An experienced upper-middle-order alternative if RR want a batter who can enter before the specialist finishers and help repair an innings. His supplied IPL sample is 351 runs from 274 legal balls across 15 matches, with a median batting position of four.",
     roleFit:
-      "Top-order power batter (Nos. 1–3) with boundary-hitting ability against 145+ kph pace and exceptional boundary-riding fielding metrics.",
+      "Most naturally a No.4/5 upper-middle-order option. The supplied IPL sample is smaller than the established Indian middle-order candidates and does not make him a No.6–8 specialist.",
     pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
+      status: "ESTIMATE_AVAILABLE",
+      postMeanPer100: 7.22,
       exposureNote:
-        "P1 score not available in archive. Supported by extensive SA20 and international T20 metrics (SR 142.6, 400+ runs in SA20 2024).",
-      scoutingMetrics: {
-        sa20StrikeRate: 142.6,
-        boundaryPercentage: "18.8%",
-        primaryBattingPosition: "1–3",
-      },
+        "The supplied estimate is +7.22 batter runs above expectation per 100 pressure-gated legal balls. The candidate record does not expose the full interval or exposure details; no values are inferred.",
     },
     upgradeOverSquad:
-      "Elite top-order overseas batting cover, but carries significant role overlap with RR's retained core. Selected ahead of overseas all-rounder candidates like Mitch Owen (PBKS release, ₹3 Cr printed; unverified T20 pressure output) and Michael Bracewell (off-spin all-rounder, unreleased in supplied 89-player register).",
+      "Adds an experienced upper-middle-order option ahead of the finishers. The marginal value is only present if RR want a more established No.4/5 alternative rather than another specialist lower-order hitter.",
     watchOut:
-      "Positional clash with Vaibhav, Jaiswal, and Parag. He is NOT a natural No.5–8 finisher and must not be recruited for death-hitting roles. Mitch Owen is a lower-order alternative but lacks proven IPL pressure pedigree.",
-    tacticalRolesSupported: ["Stabilizer", "Pace-hitting floater"],
+      "Not a No.6–8 finisher and not listed in the supplied official 89-player released register. His IPL 2027 market route and availability must be confirmed before any acquisition scenario.",
+    tacticalRolesSupported: ["Stabilizer", "Upper-middle-order floater"],
     isProvisional: true,
   },
 ];
@@ -700,92 +470,32 @@ export const RR_BOWLER_RECOMMENDATIONS: RecruitmentCandidate[] = [
     marketStatusLabel: "Released by KKR · Registration unverified",
     medicalRestriction: "MEDICAL_REVIEW",
     medicalNote:
-      "Hamstring surgical recovery in 2026. Hard medical gate: require independent medical clearance and bowling load verification before bidding.",
+      "INJURY-PRONE / ELEVATED AVAILABILITY RISK. Publicly reported injury sequence includes a shoulder injury in 2024, a left-calf injury during the 2026 T20 World Cup, and a left hamstring injury during IPL 2026 that required surgery. Treat as a high medical/workload-risk profile, not a routine fitness check. Require current independent medical assessment, rehabilitation records, bowling-load progression and franchise medical clearance before any bid. This is a historical risk flag, not a diagnosis or a claim about current fitness.",
     whyRR:
-      "Direct statistical cure for RR's biggest failure mode: death-overs execution (which cost RR Qualifier 2 in 2026). Partnering Pathirana with Jofra Archer creates the most destructive pace pair in the competition.",
+      "Adds a specialist death-overs option with a distinct sling release. This is a prospective role case, not a claim that death bowling caused RR's 2026 Qualifier 2 loss, where the main scoring burst came in the middle phase.",
     roleFit:
-      "Elite death-overs specialist. 302 IPL death deliveries, 8.80 economy, 8.55 wickets per 100 balls, and 88 recorded yorker-style deliveries. Operates in overs 15, 17, 19, and 20.",
+      "Specialist death-overs role with 45 IPL wickets from 686 legal balls across 32 matches in the supplied profile. Exact death-phase aggregates conflict between exports, so no single death economy or yorker-success figure is published here.",
     pressureEvidence: {
-      status: "ELIGIBLE_P1_ARCHIVE",
-      p1Rank: 2,
+      status: "ESTIMATE_AVAILABLE",
       postMeanPer100: -12.3827,
       lo90Per100: -22.3724,
       hi90Per100: -2.393,
-      pTop10: 0.838,
-      rankLo5: 1,
-      rankHi95: 23,
-      tier: "Core",
       gatedBalls: 361,
       gatedMatches: 40,
-      iplShareOfGated: 0.662,
       exposureNote:
-        "P1 Rank 2 overall. Bayesian posterior mean of -12.38 runs/100 conceded relative to context expectation with 83.8% probability of being a top-10 pressure bowler. Strongest pressure profile in the auction pool.",
-      scoutingMetrics: {
-        p1Rank: 2,
-        deathLegalBallsIPL: 302,
-        deathEconomyIPL: 8.8,
-        deathWicketsPer100IPL: 8.55,
-        recordedYorkers: 88,
-      },
+        "The supplied estimate is −12.38 runs saved per 100 pressure-gated deliveries, with a 90% interval of [−22.37, −2.39], from 361 deliveries across 40 matches. More negative is favourable for bowlers; the estimate does not account for injury risk.",
     },
     upgradeOverSquad:
-      "Transformational upgrade over Sandeep Sharma and Nandre Burger at the death, shifting Sandeep to an off-pace control role and freeing Archer for flexible high-leverage overs.",
+      "Adds a distinct sling-release death-bowling option that is not directly replicated by the retained group. The value depends on medical clearance, registration and how the final XI balances Archer, Shami and the Indian pace options.",
     watchOut:
-      "HARD MEDICAL RESTRICTION. Left hamstring surgery in 2026; cannot be treated as an unconditional acquisition until independent medical evaluation confirms full 145+ kph bowling workload.",
+      "Injury-prone profile with multiple reported setbacks: shoulder (2024), calf (2026 T20 World Cup) and surgically treated left hamstring (IPL 2026). Availability risk must materially reduce his auction priority unless current medical and workload evidence is reassuring. The supplied exports conflict on exact death-phase aggregates; recorded yorker usage is not yorker accuracy.",
     tacticalRolesSupported: ["DEATH_SPECIALIST", "EXPRESS_PACE"],
     isProvisional: false,
   },
   {
     id: "rr-bowl-02",
-    name: "Trent Boult",
-    rank: 2,
-    discipline: "BOWLER",
-    primaryRole: "POWERPLAY_SPECIALIST",
-    secondaryRole: "NEW_BALL_PACE",
-    nationality: "Overseas",
-    country: "New Zealand",
-    bowlingStyle: "Left-arm fast-medium swing",
-    teamReleasedFrom: "Mumbai Indians",
-    marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by MI · Registration unverified",
-    medicalRestriction: "NONE",
-    whyRR:
-      "Proven master of Jaipur's Sawai Mansingh Stadium powerplay conditions. Reconstitutes the lethal Boult-Archer-Shami new-ball triumvirate that previously dismantled top orders across the IPL.",
-    roleFit:
-      "Dedicated powerplay strike bowler. 61.2% of delivery volume occurs in overs 1–6. Attacks with early left-arm swing and seam movement.",
-    pressureEvidence: {
-      status: "ELIGIBLE_P1_ARCHIVE",
-      p1Rank: 8,
-      postMeanPer100: -6.8949,
-      lo90Per100: -16.9915,
-      hi90Per100: 3.2017,
-      pTop10: 0.382,
-      rankLo5: 3,
-      rankHi95: 58,
-      tier: "Plausible",
-      gatedBalls: 341,
-      gatedMatches: 55,
-      iplShareOfGated: 0.85,
-      exposureNote:
-        "P1 Rank 8 bowler. Posterior mean of -6.89 runs/100 with 85% IPL share in gated pressure sample. Wide 90% posterior interval (crosses zero at 3.20) reflects heavy powerplay concentration.",
-      scoutingMetrics: {
-        p1Rank: 8,
-        powerplayDeliveryShare: "61.2%",
-        deathDeliveryShare: "17.3%",
-        ipl2026Output: "2 wickets in 16.1 overs (11.63 economy)",
-      },
-    },
-    upgradeOverSquad:
-      "Elite left-arm swing angle that Nandre Burger cannot match in terms of early lateral movement, setting up high-probability powerplay wickets for Shami and Archer.",
-    watchOut:
-      "NOT A DEATH BOWLER (only 17.3% death usage). Form dipped in IPL 2026 (11.63 rpo); consumes an overseas XI slot without solving the 18–20 over death phase.",
-    tacticalRolesSupported: ["POWERPLAY_SPECIALIST", "NEW_BALL_PACE"],
-    isProvisional: false,
-  },
-  {
-    id: "rr-bowl-03",
     name: "Avesh Khan",
-    rank: 3,
+    rank: 2,
     discipline: "BOWLER",
     primaryRole: "PACE_ENFORCER",
     secondaryRole: "INDIAN_PACE_DEPTH",
@@ -797,117 +507,73 @@ export const RR_BOWLER_RECOMMENDATIONS: RecruitmentCandidate[] = [
     marketStatusLabel: "Released by LSG · Registration unverified",
     medicalRestriction: "NONE",
     whyRR:
-      "Vital Indian pace enforcer who knows RR's setup intimately (19 wickets in RR's 2024 campaign). Bowling 142+ kph hard lengths through middle and death overs frees up an overseas slot for an extra batter.",
+      "RR's 2024 leading wicket-taker with 19 wickets in 15 matches. His Indian status and previous contribution create pace-depth and rotation value without using an overseas slot.",
     roleFit:
-      "Hit-the-deck Indian fast bowler capable of bowling in all three phases: 1 over in powerplay, 2 in middle overs, and 1 at the death.",
+      "Supplied IPL sample: 64 wickets from 1,221 legal balls. Death phase: 31 wickets from 460 legal balls, or 6.74 wickets per 100. This is a multi-phase/depth case, not a proven first-choice death upgrade.",
     pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
+      status: "ESTIMATE_AVAILABLE",
+      postMeanPer100: 0.19,
       exposureNote:
-        "P1 score not available in archive. Supported by extensive IPL playoff workload for RR (19 wickets in 2024, heavy death-overs duty).",
+        "The supplied pressure estimate is +0.19 runs saved per 100 pressure-gated deliveries (unfavourable for a bowler). Death sample: 31 wickets from 460 legal balls (6.74 wickets per 100).",
       scoutingMetrics: {
         rr2024Wickets: 19,
-        careerIPLMatches: 63,
-        careerIPLWickets: 75,
-        paceAverage: "142+ kph",
+        rr2024Matches: 15,
+        deathWickets: 31,
+        deathLegalBalls: 460,
+        deathWicketsPer100: 6.74,
       },
     },
     upgradeOverSquad:
-      "Massive upgrade in proven high-intensity experience over domestic reserves Brijesh Sharma and Sushant Mishra; shields Shami from heavy death-overs load.",
+      "Adds Indian pace depth and a familiar RR option for multi-phase rotation. His role is competition for pace overs, not an established first-choice death upgrade over the retained group.",
     watchOut:
-      "Death execution can leak boundaries when radar slips; 2025/2026 IPL economy oscillated above 9.2 rpo; not an automatic first-choice frontline closer.",
+      "Death wickets per 100 legal balls are below the retained-core median of 8.12, and his IPL economy rose in 2025–26. The Indian-slot value and RR history justify the priority; the numbers do not establish him as a first-choice closer.",
     tacticalRolesSupported: ["PACE_ENFORCER", "INDIAN_PACE_DEPTH"],
     isProvisional: true,
   },
   {
-    id: "rr-bowl-04",
-    name: "Mustafizur Rahman",
-    rank: 4,
+    id: "rr-bowl-03",
+    name: "Trent Boult",
+    rank: 3,
     discipline: "BOWLER",
-    primaryRole: "VARIATION_SPECIALIST",
-    secondaryRole: "DEATH_SPECIALIST",
+    primaryRole: "POWERPLAY_SPECIALIST",
+    secondaryRole: "NEW_BALL_PACE",
     nationality: "Overseas",
-    country: "Bangladesh",
-    bowlingStyle: "Left-arm fast-medium cutters",
-    teamReleasedFrom: "Kolkata Knight Riders",
+    country: "New Zealand",
+    bowlingStyle: "Left-arm fast-medium swing",
+    teamReleasedFrom: "Mumbai Indians",
     marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by KKR · Registration unverified",
-    medicalRestriction: "MEDICAL_REVIEW",
-    medicalNote:
-      "Requires routine medical update and workload confirmation following 2026 bilateral commitments.",
+    marketStatusLabel: "Released by MI · Registration unverified",
+    medicalRestriction: "NONE",
     whyRR:
-      "Direct tactical contingency for Pathirana: brings deceptive off-pace cutters and dipping slower deliveries that grip on slower Jaipur surfaces, offering a stark contrast to Archer's express pace.",
+      "RR know the new-ball value Boult can bring. His 2024 season delivered 16 wickets and strong powerplay impact. He sits behind Avesh in RR priority because his contribution is phase-specific and uses an overseas slot.",
     roleFit:
-      "Phase-flexible variation bowler. 206 IPL death deliveries across 21 matches with 10.28 economy and 6.70 wickets/100 balls.",
+      "Powerplay-first left-arm new-ball option. Project usage: 61.2% of deliveries in the powerplay and 17.3% at the death. This is a new-ball role, not a death-bowling solution.",
     pressureEvidence: {
-      status: "ELIGIBLE_P1_ARCHIVE",
-      p1Rank: 5,
-      postMeanPer100: -8.2187,
-      lo90Per100: -17.3258,
-      hi90Per100: 0.8884,
-      pTop10: 0.35,
-      rankLo5: 3,
-      rankHi95: 54,
-      tier: "Plausible",
-      gatedBalls: 554,
-      gatedMatches: 65,
-      iplShareOfGated: 0.307,
+      status: "ESTIMATE_AVAILABLE",
+      postMeanPer100: -6.8949,
+      lo90Per100: -16.9915,
+      hi90Per100: 3.2017,
+      gatedBalls: 341,
+      gatedMatches: 55,
       exposureNote:
-        "P1 Rank 5 bowler. Concedes -8.22 runs/100 relative to expectation across 554 gated balls. 90% posterior interval includes zero (0.89); IPL share is only 30.7%.",
+        "The supplied pressure estimate is −6.89 runs saved per 100 pressure-gated deliveries, with a 90% interval of [−16.99, +3.20], from 341 deliveries across 55 matches. The interval crosses zero; the separate role readout is powerplay-heavy (61.2% of deliveries).",
       scoutingMetrics: {
-        p1Rank: 5,
-        deathLegalBallsIPL: 206,
-        deathEconomyIPL: 10.28,
-        deathWicketsPer100IPL: 6.7,
+        powerplayDeliveryShare: "61.2%",
+        deathDeliveryShare: "17.3%",
+        ipl2026Output: "2 wickets in 5 matches (11.63 economy)",
       },
     },
     upgradeOverSquad:
-      "Provides a seasoned left-arm variation specialist who can bowl overs 17 and 19 on gripping, dry surfaces where Burger's raw pace would sit up.",
+      "Offers a left-arm new-ball angle and established RR powerplay experience. The value depends on whether that phase-specific skill improves the selected XI enough to justify an overseas slot.",
     watchOut:
-      "Do NOT equate him to Pathirana: death economy (10.28) is significantly higher than Pathirana (8.80) and pressure score interval includes zero.",
-    tacticalRolesSupported: ["VARIATION_SPECIALIST", "DEATH_SPECIALIST"],
+      "NOT A DEATH BOWLER (only 17.3% death usage). Form dipped in IPL 2026 (11.63 rpo); consumes an overseas XI slot without solving the 18–20 over death phase.",
+    tacticalRolesSupported: ["POWERPLAY_SPECIALIST", "NEW_BALL_PACE"],
     isProvisional: false,
   },
   {
-    id: "rr-bowl-05",
-    name: "Akash Madhwal",
-    rank: 5,
-    discipline: "BOWLER",
-    primaryRole: "INDIAN_PACE_DEPTH",
-    secondaryRole: "DEATH_SPECIALIST",
-    nationality: "Indian",
-    country: "India",
-    bowlingStyle: "Right-arm fast round-arm",
-    teamReleasedFrom: "Chennai Super Kings",
-    marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by CSK · Registration unverified",
-    medicalRestriction: "NONE",
-    whyRR:
-      "Ex-RR squad member (IPL 2025, then CSK replacement in 2026) with skiddy, low-release trajectory that makes his yorkers difficult to get under. Affordable Indian pace reinforcement.",
-    roleFit:
-      "Middle-and-death phase bowler. 17 IPL matches, 23 wickets; 106 legal death deliveries at 10.30 economy with 6.72 wickets per 100 balls.",
-    pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
-      exposureNote:
-        "P1 score not available in archive. Supported by 106 IPL death deliveries with strong strike rate (6.72 wkts/100).",
-      scoutingMetrics: {
-        iplMatches: 17,
-        iplWickets: 23,
-        deathDeliveries: 106,
-        deathEconomy: 10.3,
-        deathWicketsPer100: 6.72,
-      },
-    },
-    upgradeOverSquad:
-      "Gives RR a specialist Indian yorker option on the bench without paying premium auction prices, preserving purse for top-tier targets.",
-    watchOut:
-      "Economy rate at death (10.30) can be expensive on good batting tracks; limited powerplay utility.",
-    tacticalRolesSupported: ["INDIAN_PACE_DEPTH", "DEATH_SPECIALIST"],
-    isProvisional: true,
-  },
-  {
-    id: "rr-bowl-06",
+    id: "rr-bowl-04",
     name: "Matt Henry",
-    rank: 6,
+    rank: 4,
     discipline: "BOWLER",
     primaryRole: "POWERPLAY_SPECIALIST",
     secondaryRole: "NEW_BALL_PACE",
@@ -919,774 +585,242 @@ export const RR_BOWLER_RECOMMENDATIONS: RecruitmentCandidate[] = [
     marketStatusLabel: "Released by CSK · Registration unverified",
     medicalRestriction: "NONE",
     whyRR:
-      "In blazing current form (took 6/27 vs India in the 13 Nov 2026 ODI). Delivers impeccable upright seam presentation that extracts movement on spicy, green, or hard surfaces.",
-    roleFit: "New-ball powerplay strike bowler who hits the seam relentlessly in overs 1–6.",
+      "A possible high-quality overseas new-ball seam option. His recent performance against India is a scouting reason to review him, not a reason to upgrade his T20 pressure rating.",
+    roleFit:
+      "New-ball seam option. The 6/27 against India on 13 November 2026 came in an ODI and is kept separate from IPL/T20I pressure evidence.",
     pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
+      status: "ESTIMATE_AVAILABLE",
+      postMeanPer100: 4.64,
       exposureNote:
-        "P1 score not available in archive. METHODOLOGY NOTE: His recent 6/27 ODI figures against India are current-form indicators only; they are NOT T20 pressure evidence and must NOT enter P1.",
-      scoutingMetrics: {
-        recentODIForm: "6/27 vs India (13 Nov 2026)",
-        t2oInternationalEconomy: 7.82,
-        powerplayWicketsT20I: "48 wickets in PP",
-      },
+        "The supplied estimate is +4.64 runs saved per 100 pressure-gated deliveries (unfavourable for a bowler). His 6/27 against India on 13 Nov 2026 was ODI evidence only and does not enter the T20 estimate.",
+      scoutingMetrics: { "ODI vs India 13 Nov 2026": "6/27 (ODI; not T20 pressure evidence)" },
     },
     upgradeOverSquad:
-      "High-class overseas new-ball alternative if bidding for Trent Boult exceeds disciplined ceilings.",
+      "A possible overseas new-ball alternative if the role fit and final XI balance justify Henry over Boult. Recent ODI form is a scouting input only; it does not establish a T20 pressure advantage.",
     watchOut:
-      "High role overlap with Mohammed Shami and Jofra Archer; limited death-overs execution; consumes an overseas XI slot.",
+      "The 6/27 cannot be counted as T20 pressure evidence. His IPL sample is limited and his role overlaps Shami, Archer and Sandeep.",
     tacticalRolesSupported: ["POWERPLAY_SPECIALIST", "NEW_BALL_PACE"],
     isProvisional: true,
   },
   {
-    id: "rr-bowl-07",
-    name: "Gerald Coetzee",
-    rank: 7,
+    id: "rr-bowl-05",
+    name: "Mustafizur Rahman",
+    rank: 5,
     discipline: "BOWLER",
-    primaryRole: "EXPRESS_PACE",
-    secondaryRole: "PACE_ENFORCER",
+    primaryRole: "VARIATION_SPECIALIST",
     nationality: "Overseas",
-    country: "South Africa",
-    bowlingStyle: "Right-arm fast (145+ kph)",
-    teamReleasedFrom: "Mumbai Indians",
+    country: "Bangladesh",
+    bowlingStyle: "Left-arm fast-medium cutters",
+    teamReleasedFrom: "Kolkata Knight Riders",
     marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by MI · Registration unverified",
+    marketStatusLabel: "Released by KKR · Registration unverified",
     medicalRestriction: "NONE",
     whyRR:
-      "Genuine 145+ kph hostility and aggression. Provides a hit-the-deck express enforcer who can intimidate middle orders with bouncers and heavy lengths.",
+      "Offers a different left-arm angle and cutters from RR's right-arm pace group. His role is matchup and surface variation; the report does not treat him as a like-for-like Pathirana replacement.",
     roleFit:
-      "Middle-overs strike bowler and enforcer; 13 wickets in 10 matches for MI in IPL 2024.",
+      "Left-arm cutter and phase-variation option. The submitted IPL summary records 27 wickets from 506 legal balls across 22 matches; no like-for-like death comparison is claimed.",
     pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
+      status: "ESTIMATE_AVAILABLE",
+      postMeanPer100: -8.2187,
+      lo90Per100: -17.3258,
+      hi90Per100: 0.8884,
+      gatedBalls: 554,
+      gatedMatches: 65,
       exposureNote:
-        "P1 score not available in archive. Evaluated through 10 IPL matches with MI (13 wickets, strike rate 15.6 balls/wicket).",
+        "The supplied estimate is −8.22 runs saved per 100 pressure-gated deliveries, with a 90% interval of [−17.33, +0.89], from 554 deliveries across 65 matches. The interval crosses zero.",
       scoutingMetrics: {
-        iplMatches: 10,
-        iplWickets: 13,
-        strikeRate: 15.69,
-        topSpeedKph: "152.3 kph",
+        iplWickets: 27,
+        iplLegalBalls: 506,
+        iplMatches: 22,
       },
     },
     upgradeOverSquad:
-      "Adds sheer intimidation factor and high pace alongside Jofra Archer, overwhelming opponents who struggle against high heat.",
+      "Adds a left-arm variation option if the selected matchup and surface justify it. The report does not establish a fixed death-over allocation or a superior Jaipur-surface outcome.",
     watchOut:
-      "Leaky economy rate (career IPL economy 10.18); frequently concedes boundary balls when attempting bouncers; consumes overseas slot.",
-    tacticalRolesSupported: ["EXPRESS_PACE", "PACE_ENFORCER"],
+      "The 90% pressure interval crosses zero and availability/registration remain unverified. Treat him as a left-arm variation option, not a like-for-like Pathirana replacement.",
+    tacticalRolesSupported: ["VARIATION_SPECIALIST"],
+    isProvisional: false,
+  },
+  {
+    id: "rr-bowl-06",
+    name: "Akash Madhwal",
+    rank: 6,
+    discipline: "BOWLER",
+    primaryRole: "INDIAN_PACE_DEPTH",
+    secondaryRole: "DEATH_SPECIALIST",
+    nationality: "Indian",
+    country: "India",
+    bowlingStyle: "Right-arm fast round-arm",
+    teamReleasedFrom: "Chennai Super Kings",
+    marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
+    marketStatusLabel: "Released by CSK · Registration unverified",
+    medicalRestriction: "NONE",
+    whyRR:
+      "Indian pace depth with a previous RR stint. The submitted report records 23 IPL wickets in 17 matches and four wickets in four RR matches in 2025; this is a depth and competition case, not an established death upgrade.",
+    roleFit:
+      "Indian pace / death-depth option. The report notes the 2025 RR return (four wickets in four matches at 11.07 economy) and explicitly says phase exports conflict.",
+    pressureEvidence: {
+      status: "ESTIMATE_AVAILABLE",
+      postMeanPer100: -4.56,
+      lo90Per100: -16.06,
+      hi90Per100: 6.94,
+      gatedBalls: 128,
+      gatedMatches: 15,
+      exposureNote:
+        "The supplied estimate has a 90% interval crossing zero and a small pressure sample (128 deliveries / 15 matches).",
+      scoutingMetrics: {
+        iplWickets: 23,
+        iplMatches: 17,
+        rr2025Wickets: 4,
+        rr2025Matches: 4,
+        rr2025Economy: 11.07,
+      },
+    },
+    upgradeOverSquad:
+      "Adds Indian pace competition without using an overseas slot. The source does not establish an immediate first-choice upgrade over RR's retained pace group.",
+    watchOut:
+      "The 2025 RR sample was four wickets in four matches at 11.07 economy. The sample is small and phase exports conflict; do not extrapolate it into a repeatable death skill.",
+    tacticalRolesSupported: ["INDIAN_PACE_DEPTH", "DEATH_SPECIALIST"],
     isProvisional: true,
   },
   {
-    id: "rr-bowl-08",
+    id: "rr-bowl-07",
     name: "Mangesh Yadav",
-    rank: 8,
+    rank: 7,
     discipline: "BOWLER",
     primaryRole: "INDIAN_PACE_DEPTH",
-    secondaryRole: "VARIATION_SPECIALIST",
     nationality: "Indian",
     country: "India",
     bowlingStyle: "Left-arm fast-medium",
     teamReleasedFrom: "Royal Challengers Bengaluru",
     marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by RCB · Registration unverified",
+    marketStatusLabel: "Released by RCB · registration unverified",
     medicalRestriction: "NONE",
     whyRR:
-      "Rare domestic left-arm fast bowler with lower-order batting capability. Commanded ₹5.2 Crore in the 2026 auction; stellar MP T20 2025 campaign (14 wickets in 21 overs at 8.00 economy).",
+      "Adds a domestic left-arm pace profile not currently represented in RR's retained seam group, with lower-order batting potential. The report treats him as a development option rather than a ready-made IPL pressure bowler.",
     roleFit:
-      "Domestic Indian pace-bowling depth and developmental left-arm option for succession planning.",
+      "Domestic Indian left-arm pace prospect. The supplied report records 14 wickets in 21 overs at economy 8.00 in MP T20 League 2025, followed by four wickets in 21 overs at economy 10.67 in 2026.",
     pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
+      status: "NO_ESTIMATE",
       exposureNote:
-        "P1 score not available in archive. Domestic MP T20 evidence: 14 wickets in 21 overs at 8.00 economy in 2025; 4 wickets in 21 overs at 10.67 economy in 2026.",
+        "No formal pressure estimate or qualifying IPL pressure sample. Domestic MP T20 League evidence only: 14 wickets in 21 overs at economy 8.00 in 2025; four wickets in 21 overs at economy 10.67 in 2026.",
       scoutingMetrics: {
-        previousAuctionPriceCrore: 5.2,
         mpT20Wickets2025: 14,
+        mpT20Overs2025: 21,
         mpT20Economy2025: 8.0,
+        mpT20Wickets2026: 4,
+        mpT20Overs2026: 21,
+        mpT20Economy2026: 10.67,
       },
     },
     upgradeOverSquad:
-      "Provides a left-arm pace angle from an Indian slot, enabling RR to field an extra overseas batter if desired.",
+      "Could add an Indian left-arm pace option for depth, but the supplied evidence does not establish him as an immediate first-choice option or a pressure-qualified IPL bowler.",
     watchOut:
-      "Zero senior IPL match experience; economy ballooned to 10.67 in 2026 MP T20; not a proven death bowler.",
-    tacticalRolesSupported: ["INDIAN_PACE_DEPTH", "VARIATION_SPECIALIST"],
+      "The official IPL 2027 released-player list places Mangesh Yadav under RCB, resolving the earlier internal report conflict. This confirms release only, not auction registration. The domestic sample is limited and 2026 was more expensive than 2025.",
+    tacticalRolesSupported: ["INDIAN_PACE_DEPTH", "Development option"],
     isProvisional: true,
   },
   {
-    id: "rr-bowl-09",
+    id: "rr-bowl-08",
     name: "Deepak Chahar",
-    rank: 9,
+    rank: 8,
     discipline: "BOWLER",
     primaryRole: "POWERPLAY_SPECIALIST",
     secondaryRole: "NEW_BALL_PACE",
     nationality: "Indian",
     country: "India",
     bowlingStyle: "Right-arm medium-fast swing",
-    teamReleasedFrom: "Chennai Super Kings",
+    teamReleasedFrom: "Mumbai Indians",
     marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by CSK · Registration unverified",
+    marketStatusLabel: "Released by MI · Registration unverified",
     medicalRestriction: "NONE",
     whyRR:
-      "Elite domestic powerplay swing bowler with extensive championship-winning pedigree. Provides early wickets and useful lower-order hitting at No.8, saving an overseas slot.",
+      "An Indian powerplay swing option to consider only if RR need a specific early-overs matchup. The report flags overlap with Shami, Sandeep and Archer and does not present him as a middle/death solution.",
     roleFit:
-      "Front-loaded powerplay bowler (typically bowls 3 of the first 6 overs) with lifetime IPL powerplay economy under 7.8.",
+      "Role: Indian new-ball swing. The supplied pressure estimate is −2.06 runs saved per 100 pressure-gated deliveries; the candidate record does not provide a phase-specific economy figure.",
     pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
+      status: "ESTIMATE_AVAILABLE",
+      postMeanPer100: -2.06,
       exposureNote:
-        "P1 score not available in archive. Backed by 81 IPL matches (77 wickets, 7.97 economy) and proven multi-wicket powerplay spells.",
-      scoutingMetrics: {
-        iplMatches: 81,
-        iplWickets: 77,
-        powerplayEconomy: 7.74,
-      },
+        "The supplied pressure estimate is −2.06 runs saved per 100 pressure-gated deliveries. Full interval and exposure details are not present in the candidate ledger.",
     },
     upgradeOverSquad:
-      "Enables an all-Indian new-ball attack (Chahar + Shami) alongside Archer, unlocking two overseas batting slots (Ferreira + Shanaka/Hetmyer).",
+      "Could provide a specific Indian swing option in a new-ball combination, but competes with retained Shami and Sandeep; selection depends on current fitness and the precise matchup.",
     watchOut:
-      "Fragile injury history (recurrent hamstring, back, and quadriceps issues); minimal effectiveness outside the first 6 overs.",
+      "Fitness history requires current assessment. The submitted report describes him as a powerplay swing option and not the answer to RR's middle/death bowling requirement.",
     tacticalRolesSupported: ["POWERPLAY_SPECIALIST", "NEW_BALL_PACE"],
     isProvisional: true,
   },
   {
-    id: "rr-bowl-10",
-    name: "Spencer Johnson",
-    rank: 10,
+    id: "rr-bowl-09",
+    name: "Gerald Coetzee",
+    rank: 9,
     discipline: "BOWLER",
     primaryRole: "EXPRESS_PACE",
-    secondaryRole: "POWERPLAY_SPECIALIST",
+    secondaryRole: "PACE_ENFORCER",
     nationality: "Overseas",
-    country: "Australia",
-    bowlingStyle: "Left-arm fast (145+ kph)",
-    teamReleasedFrom: "Gujarat Titans",
+    country: "South Africa",
+    bowlingStyle: "Right-arm fast",
+    teamReleasedFrom: "Sunrisers Hyderabad",
     marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
-    marketStatusLabel: "Released by GT · Registration unverified",
+    marketStatusLabel: "Released by SRH · Registration unverified",
     medicalRestriction: "NONE",
     whyRR:
-      "High-release 145+ kph left-arm express pace capable of extracting steep bounce. Natural left-arm pace alternative to Nandre Burger.",
+      "Could add a high-pace wicket-taking option if RR want an overseas middle/death strike role rather than another pure new-ball bowler.",
     roleFit:
-      "Powerplay and middle-overs strike bowler; utilizes high arm action and speed to push batters onto the back foot.",
+      "The supplied IPL profile records 14 wickets from 261 legal balls across 13 matches, including seven wickets from 93 death legal balls. This is a small sample, not proof of sustained death control.",
     pressureEvidence: {
-      status: "P1_NOT_AVAILABLE_IN_ARCHIVE",
+      status: "ESTIMATE_AVAILABLE",
+      postMeanPer100: -3.86,
       exposureNote:
-        "P1 score not available in archive. Evaluated through BBL and IPL 2024 appearances (high dot-ball percentage against top orders).",
+        "The supplied pressure estimate is −3.86 runs saved per 100 pressure-gated deliveries. The candidate ledger does not expose a full interval; no interval is inferred.",
       scoutingMetrics: {
-        bblEconomy: 7.15,
-        topSpeedKph: "148.5 kph",
-        leftArmAngle: "Steep bounce / High release",
+        iplWickets: 14,
+        iplLegalBalls: 261,
+        iplMatches: 13,
+        deathWickets: 7,
+        deathLegalBalls: 93,
       },
     },
     upgradeOverSquad:
-      "Offers left-arm express pace depth if Nandre Burger experiences fatigue or tactical matchups demand extra bounce.",
+      "Could add a high-pace strike option alongside Archer if his overseas slot and fitness/control profile improve the XI. The report does not establish a guaranteed execution advantage.",
     watchOut:
-      "Consumes an overseas XI slot; recurring soft-tissue injuries; death bowling at IPL level remains volatile.",
-    tacticalRolesSupported: ["EXPRESS_PACE", "POWERPLAY_SPECIALIST"],
+      "Small IPL sample, overseas slot cost and fitness/control variability. The death sample does not establish sustained control.",
+    tacticalRolesSupported: ["EXPRESS_PACE", "PACE_ENFORCER"],
     isProvisional: true,
   },
-];
-
-/**
- * ============================================================================
- * PART 6: TACTICAL MIDDLE-ORDER FLEXIBILITY (3 SPECIFIC VARIATIONS)
- * ============================================================================
- */
-export const MIDDLE_ORDER_VARIATIONS: MiddleOrderTacticalVariation[] = [
   {
-    id: "mod-var-a",
-    title: "Variation A — Early Wickets Lost (Stabilization & Rebuild)",
-    context:
-      "Top-order wickets fall inside the powerplay (e.g. 25/2 in overs 1–4). Priority is partnership rebuilding without slowing the scoring rate.",
-    battingOrderSlots4to8: [
-      {
-        slotNumber: 4,
-        player: "Dhruv Jurel",
-        role: "Stabilizer / Wicketkeeper-anchor",
-        matchupRationale:
-          "Enters early to arrest collapse, rotate strike, and build a partnership with Parag.",
+    id: "rr-bowl-10",
+    name: "Onkar Tarmale",
+    rank: 10,
+    discipline: "BOWLER",
+    primaryRole: "INDIAN_PACE_DEPTH",
+    nationality: "Indian",
+    country: "India",
+    bowlingStyle: "Right-arm fast-medium",
+    teamReleasedFrom: "Sunrisers Hyderabad",
+    marketStatus: "RELEASED_REGISTRATION_UNVERIFIED",
+    marketStatusLabel: "Released by SRH · Registration unverified",
+    medicalRestriction: "NONE",
+    whyRR:
+      "An uncapped Indian pace prospect who can widen the domestic fast-bowling pool. He belongs in the ten-player research board as a development option, not as an immediate first-choice pressure bowler.",
+    roleFit:
+      "Mumbai T20 League 2026: seven wickets in 15.3 overs at an economy of 9.03. The supplied material identifies him as a right-arm fast-medium bowler; no qualifying IPL pressure sample is available.",
+    pressureEvidence: {
+      status: "NO_ESTIMATE",
+      exposureNote:
+        "No formal pressure estimate and no qualifying IPL pressure sample. Mumbai T20 League figures are domestic scouting evidence only.",
+      scoutingMetrics: {
+        "Mumbai T20 League 2026 wickets": 7,
+        "Mumbai T20 League 2026 overs": "15.3",
+        "Mumbai T20 League 2026 economy": 9.03,
       },
-      {
-        slotNumber: 5,
-        player: "Nitish Rana / Nehal Wadhera",
-        role: "Left-handed spin disruptor & Rebuilder",
-        matchupRationale:
-          "Left-hand presence prevents opposing leg-spinners/SLA from bowling unopposed lines; absorbs pressure through overs 7–12.",
-      },
-      {
-        slotNumber: 6,
-        player: "Riyan Parag",
-        role: "Middle-order accumulator & Accelerator",
-        matchupRationale:
-          "Takes ownership of overs 11–17 to accelerate once the innings is stabilized.",
-      },
-      {
-        slotNumber: 7,
-        player: "Ravindra Jadeja",
-        role: "Left-handed balance & Strike-rotator",
-        matchupRationale: "Ensures deep batting experience and prevents late lower-order panics.",
-      },
-      {
-        slotNumber: 8,
-        player: "Donovan Ferreira",
-        role: "Boundary-hitting finisher",
-        matchupRationale:
-          "Preserved for overs 17–20 where his 200+ strike rate produces maximum death-overs damage.",
-      },
-    ],
-    keyTacticalAdvantage:
-      "Protects boundary hitters from early high-risk entry while maintaining LHB/RHB balance throughout the middle overs.",
-    tradeOff:
-      "Requires Nehal or Rana to play a disciplined consolidation role, slightly lowering powerplay ceiling for innings security.",
-  },
-  {
-    id: "mod-var-b",
-    title: "Variation B — Spin-Heavy Middle Overs (Disrupt & Counter)",
-    context:
-      "Middle overs (overs 7–15) dominated by opposition wrist-spin and left-arm orthodox (e.g. at Chennai, Lucknow, or Delhi).",
-    battingOrderSlots4to8: [
-      {
-        slotNumber: 4,
-        player: "Riyan Parag",
-        role: "Spin-hitter & Pace floater",
-        matchupRationale: "Dominant against right-arm off-spin and medium pacers.",
-      },
-      {
-        slotNumber: 5,
-        player: "Nehal Wadhera / Mahipal Lomror",
-        role: "Left-handed spin disruptor",
-        matchupRationale:
-          "Target short boundaries and slog-sweep away-spinning leg-spin and SLA; breaks bowling rhythms.",
-      },
-      {
-        slotNumber: 6,
-        player: "Dhruv Jurel",
-        role: "Pace-hitting floater / Gap finder",
-        matchupRationale:
-          "Manipulates fielders with sweeps, dabs, and aggressive running between wickets.",
-      },
-      {
-        slotNumber: 7,
-        player: "Donovan Ferreira",
-        role: "Power floater against spin/pace",
-        matchupRationale: "Pummel any loose deliveries over long-on; punishes mystery spinners.",
-      },
-      {
-        slotNumber: 8,
-        player: "Ravindra Jadeja",
-        role: "All-rounder / Finish",
-        matchupRationale: "Expert running and boundary placement against defensive death fields.",
-      },
-    ],
-    keyTacticalAdvantage:
-      "Alternates left and right hands on every dismissal, preventing opposition captains from establishing favorable match-ups.",
-    tradeOff:
-      "Aggressive spin disruption carries slight wicket risk if execution on turning surfaces is misjudged.",
-  },
-  {
-    id: "mod-var-c",
-    title: "Variation C — Death Overs / High Required Run Rate (Pure Velocity)",
-    context:
-      "Chasing 200+ or entering overs 14+ with platform intact (e.g. 140/3 in 13 overs). Maximum boundary velocity required.",
-    battingOrderSlots4to8: [
-      {
-        slotNumber: 4,
-        player: "Riyan Parag",
-        role: "Boundary accelerator",
-        matchupRationale: "Target straight boundaries and launch maximums off middle-overs pacers.",
-      },
-      {
-        slotNumber: 5,
-        player: "Donovan Ferreira",
-        role: "Boundary-hitting finisher",
-        matchupRationale:
-          "Promoted ahead of Jurel to maximize face-time in the death overs; strike rate >200 against pace.",
-      },
-      {
-        slotNumber: 6,
-        player: "Dhruv Jurel",
-        role: "Ramp and 360-degree finisher",
-        matchupRationale: "Ramps and scoops wide yorkers to exploit vacant fine leg and third man.",
-      },
-      {
-        slotNumber: 7,
-        player: "Nehal Wadhera / Mahipal Lomror",
-        role: "Left-handed boundary finisher",
-        matchupRationale: "Punish wide yorkers or cutters outside off-stump.",
-      },
-      {
-        slotNumber: 8,
-        player: "Ravindra Jadeja / Dasun Shanaka",
-        role: "Final-over boundary hitter",
-        matchupRationale: "Strike-rotation and last-ball boundary execution.",
-      },
-    ],
-    keyTacticalAdvantage:
-      "Front-loads boundary hitters (Ferreira promoted) to ensure balls are not consumed by defensive anchors.",
-    tradeOff:
-      "Higher risk of sudden clatter of wickets if Ferreira or Parag miscue early in the acceleration phase.",
-  },
-];
-
-/**
- * ============================================================================
- * PART 7: IMPACT PLAYER STRATEGY (6 SPECIFIC SCENARIOS)
- * ============================================================================
- */
-export const IMPACT_PLAYER_SCENARIOS: ImpactPlayerScenarioRecommendation[] = [
-  {
-    id: "impact-a",
-    scenarioName: "A. Batting-First, High-Scoring Surface",
-    matchContext:
-      "Jaipur or Chinnaswamy highway where par score is 215+. RR bat first and need maximum firepower to post 225+.",
-    recommendedPlayer: "Nehal Wadhera / Abishek Porel",
-    playerRole: "Indian middle-order power floater",
-    substitutedStartingPlayer: "Sandeep Sharma (bowler rested while batting)",
-    whyThisSubstitution:
-      "Allows RR to field 8 front-line batters while batting first, replacing the seamer who will only bowl in the second innings.",
-    battingBenefit: "Deepens batting order to No.8 with an explosive left-handed boundary hitter.",
-    bowlingBenefit:
-      "No bowling impact during 1st innings; seamer substituted back via Impact regulation before defense.",
-    overseasCountInXI: 3,
-    squadEligibility: "Eligible Indian squad member",
-    medicalRestrictions: "None",
-    mainDownside:
-      "Burns the single available Impact substitution early; cannot replace an injured bowler in 2nd innings.",
-  },
-  {
-    id: "impact-b",
-    scenarioName: "B. Chasing a Difficult Target (190+)",
-    matchContext:
-      "RR chasing 190+ under lights. Requires deep batting lineup with aggressive left-hand boundary options.",
-    recommendedPlayer: "Abishek Porel / Nitish Rana",
-    playerRole: "Left-handed floating batting accelerator",
-    substitutedStartingPlayer: "Mohammed Shami (completed 4 overs in 1st innings)",
-    whyThisSubstitution:
-      "Replaces a frontline seamer whose bowling duty is complete with an aggressive left-handed batter to win the chase.",
-    battingBenefit:
-      "Injects high-intent boundary hitter into middle overs to prevent required rate from climbing past 12 rpo.",
-    bowlingBenefit: "N/A (2nd innings chase).",
-    overseasCountInXI: 3,
-    squadEligibility: "Eligible Indian squad member",
-    medicalRestrictions: "None",
-    mainDownside: "If the top order collapses completely, bench seamer is already off the field.",
-  },
-  {
-    id: "impact-c",
-    scenarioName: "C. Defending a Total (Pace Control)",
-    matchContext:
-      "Defending 175–195 on standard pitch. Opposition has strong middle order requiring hard lengths and slower balls.",
-    recommendedPlayer: "Avesh Khan / Sandeep Sharma",
-    playerRole: "Indian middle/death pace enforcer",
-    substitutedStartingPlayer: "Nehal Wadhera (completed batting innings)",
-    whyThisSubstitution:
-      "Substitutes out a specialist batter after the 1st innings to introduce an extra specialist bowler, providing 6 full bowling options.",
-    battingBenefit: "N/A (Defending in 2nd innings).",
-    bowlingBenefit:
-      "Provides 4 overs of experienced pace/slower-ball control, taking pressure off Shami and Archer.",
-    overseasCountInXI: 3,
-    squadEligibility: "Eligible Indian squad member",
-    medicalRestrictions: "None",
-    mainDownside:
-      "If defending team is bowled out inside 15 overs, substituted player had minimal game impact.",
-  },
-  {
-    id: "impact-d",
-    scenarioName: "D. Powerplay Assistance (Swing Conditions)",
-    matchContext:
-      "Cloud cover or fresh grass on Jaipur pitch with strong early swing. Need to blow open opposition top order in overs 1–6.",
-    recommendedPlayer: "Trent Boult / Deepak Chahar",
-    playerRole: "Powerplay swing specialist",
-    substitutedStartingPlayer: "Shubham Dubey (batter substituted out before bowling)",
-    whyThisSubstitution:
-      "Maximizes new-ball movement alongside Archer and Shami to take 3+ powerplay wickets.",
-    battingBenefit: "N/A (Bowler brought on for defense).",
-    bowlingBenefit: "World-class left-arm swing in overs 1, 3, and 5; lethal powerplay squeeze.",
-    overseasCountInXI: 4,
-    squadEligibility: "Overseas cap strictly enforced (4/4 in XI)",
-    medicalRestrictions: "None",
-    mainDownside:
-      "Boult provides very limited death-overs execution; remaining 14 overs must be covered by Archer/Shami/Sandeep.",
-  },
-  {
-    id: "impact-e",
-    scenarioName: "E. Death-Overs Defence (High-Pressure Closer)",
-    matchContext:
-      "Opposition needs 55 runs off final 5 overs. Surface is flat; yorkers and dipping slower balls are mandatory.",
-    recommendedPlayer: "Matheesha Pathirana",
-    playerRole: "Death-overs specialist (P1 Rank 2)",
-    substitutedStartingPlayer: "Vaibhav Sooryavanshi (opener substituted after batting)",
-    whyThisSubstitution:
-      "Brings on the competition's highest-ranked pressure closer for overs 15, 17, 19, and 20.",
-    battingBenefit: "N/A.",
-    bowlingBenefit:
-      "8.80 IPL death economy, 88 recorded yorkers, 8.55 wickets/100 balls in death phase.",
-    overseasCountInXI: 4,
-    squadEligibility: "Contingent on verified auction acquisition and registration",
-    medicalRestrictions:
-      "HARD GATE: Requires verified medical clearance from 2026 hamstring surgery.",
-    mainDownside:
-      "If Pathirana is not medically passed, must substitute Mustafizur or Akash Madhwal instead.",
-  },
-  {
-    id: "impact-f",
-    scenarioName: "F. Spin-Friendly Surface (Chennai / Lucknow)",
-    matchContext:
-      "Dry, turning track offering sharp grip and slow bounce. Opposition stacked with right-handers.",
-    recommendedPlayer: "Manimaran Siddharth / Yash Raj Punja",
-    playerRole: "Matchup spin specialist (Left-arm orthodox / Leg-spin)",
-    substitutedStartingPlayer: "Nandre Burger / Fast bowler rested for spin",
-    whyThisSubstitution:
-      "Replaces redundant seamer with a specialist spinner to create a 3-spinner choke (Jadeja + Bishnoi + Siddharth).",
-    battingBenefit: "N/A.",
-    bowlingBenefit: "12 overs of relentless spin squeeze; ideal matchup against RHB-heavy lineups.",
-    overseasCountInXI: 2,
-    squadEligibility: "Eligible Indian squad member",
-    medicalRestrictions: "None",
-    mainDownside:
-      "Reduces fast-bowling penetration if dew appears in the second half of the match.",
-  },
-];
-
-/**
- * ============================================================================
- * PART 8: 5 DETAILED TACTICAL STARTING XI SCENARIOS
- * ============================================================================
- */
-export const PROPOSED_STARTING_XI_SCENARIOS: TacticalScenarioLineup[] = [
-  {
-    id: "tactical-scen-1",
-    name: "Pace-Oriented Attack",
-    title: "Pace-Oriented Attack · Express Heat & Hard Lengths",
-    purpose:
-      "Overwhelm opposition with raw pace and bounce using Archer, Burger, Shami and Sandeep Sharma.",
-    startingXI: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Dhruv Jurel",
-      "Riyan Parag",
-      "Nehal Wadhera",
-      "Donovan Ferreira",
-      "Ravindra Jadeja",
-      "Ravi Bishnoi",
-      "Jofra Archer",
-      "Mohammed Shami",
-      "Nandre Burger",
-    ],
-    overseasCount: 3,
-    paceOptionsCount: 4,
-    spinOptionsCount: 3,
-    deathOversSpecialists: ["Jofra Archer", "Sandeep Sharma (Impact)"],
-    roleCoverageSummary: {
-      wicketkeepers: ["Dhruv Jurel", "Donovan Ferreira"],
-      topOrder: ["Vaibhav Sooryavanshi", "Yashasvi Jaiswal", "Riyan Parag"],
-      middleOrder: ["Dhruv Jurel", "Nehal Wadhera"],
-      finishers: ["Donovan Ferreira", "Ravindra Jadeja"],
-      spinners: ["Ravi Bishnoi", "Ravindra Jadeja", "Riyan Parag"],
-      seamers: ["Jofra Archer", "Mohammed Shami", "Nandre Burger"],
     },
-    benchDisplacement: {
-      displacedRetained: [
-        "Sandeep Sharma",
-        "Dasun Shanaka",
-        "Manimaran Siddharth",
-        "Yash Raj Punja",
-        "Shubham Dubey",
-        "Sushant Mishra",
-        "Brijesh Sharma",
-        "Lhuan-dre Pretorius",
-        "Aman Rao Perala",
-      ],
-      startingRetainedCount: 10,
-      startingAdditionsCount: 1,
-    },
-    impactPlayerAlternatives: [
-      "Sandeep Sharma (death bowling control)",
-      "Mahipal Lomror (extra spin hitting)",
-    ],
-    actualVsHypothetical: {
-      retainedCount: 10,
-      hypotheticalAdditions: ["Nehal Wadhera"],
-    },
-  },
-  {
-    id: "tactical-scen-2",
-    name: "Batting & All-Rounder Flexibility",
-    title: "Batting Depth & All-Round Balance · Shanaka Dynamic",
-    purpose:
-      "Deepen batting to No.8 with Dasun Shanaka, creating multi-dimensional batting and seam options.",
-    startingXI: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Dhruv Jurel",
-      "Riyan Parag",
-      "Nehal Wadhera",
-      "Donovan Ferreira",
-      "Ravindra Jadeja",
-      "Dasun Shanaka",
-      "Ravi Bishnoi",
-      "Jofra Archer",
-      "Mohammed Shami",
-    ],
-    overseasCount: 3,
-    paceOptionsCount: 3,
-    spinOptionsCount: 3,
-    deathOversSpecialists: ["Jofra Archer", "Sandeep Sharma (Impact)"],
-    roleCoverageSummary: {
-      wicketkeepers: ["Dhruv Jurel", "Donovan Ferreira"],
-      topOrder: ["Vaibhav Sooryavanshi", "Yashasvi Jaiswal", "Riyan Parag"],
-      middleOrder: ["Dhruv Jurel", "Nehal Wadhera"],
-      finishers: ["Donovan Ferreira", "Ravindra Jadeja", "Dasun Shanaka"],
-      spinners: ["Ravi Bishnoi", "Ravindra Jadeja", "Riyan Parag"],
-      seamers: ["Jofra Archer", "Mohammed Shami", "Dasun Shanaka"],
-    },
-    benchDisplacement: {
-      displacedRetained: [
-        "Nandre Burger",
-        "Sandeep Sharma",
-        "Manimaran Siddharth",
-        "Yash Raj Punja",
-        "Shubham Dubey",
-        "Sushant Mishra",
-        "Brijesh Sharma",
-        "Lhuan-dre Pretorius",
-        "Aman Rao Perala",
-      ],
-      startingRetainedCount: 10,
-      startingAdditionsCount: 1,
-    },
-    impactPlayerAlternatives: [
-      "Sandeep Sharma (pace reinforcement)",
-      "Yash Raj Punja (conditions leg-spin)",
-    ],
-    actualVsHypothetical: {
-      retainedCount: 10,
-      hypotheticalAdditions: ["Nehal Wadhera"],
-    },
-  },
-  {
-    id: "tactical-scen-3",
-    name: "Spin-Friendly Conditions",
-    title: "Slow & Turning Track · Triple Indian Spin Choke",
-    purpose:
-      "Dominate turning surfaces (SMS, Chepauk, Ekana) with Bishnoi, Jadeja and Siddharth/Punja.",
-    startingXI: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Dhruv Jurel",
-      "Riyan Parag",
-      "Nitish Rana",
-      "Donovan Ferreira",
-      "Ravindra Jadeja",
-      "Ravi Bishnoi",
-      "Manimaran Siddharth",
-      "Jofra Archer",
-      "Mohammed Shami",
-    ],
-    overseasCount: 2,
-    paceOptionsCount: 2,
-    spinOptionsCount: 4,
-    deathOversSpecialists: ["Jofra Archer", "Sandeep Sharma (Impact)"],
-    roleCoverageSummary: {
-      wicketkeepers: ["Dhruv Jurel", "Donovan Ferreira"],
-      topOrder: ["Vaibhav Sooryavanshi", "Yashasvi Jaiswal", "Riyan Parag"],
-      middleOrder: ["Dhruv Jurel", "Nitish Rana"],
-      finishers: ["Donovan Ferreira", "Ravindra Jadeja"],
-      spinners: ["Ravi Bishnoi", "Manimaran Siddharth", "Ravindra Jadeja", "Riyan Parag"],
-      seamers: ["Jofra Archer", "Mohammed Shami"],
-    },
-    benchDisplacement: {
-      displacedRetained: [
-        "Nandre Burger",
-        "Dasun Shanaka",
-        "Sandeep Sharma",
-        "Yash Raj Punja",
-        "Shubham Dubey",
-        "Sushant Mishra",
-        "Brijesh Sharma",
-        "Lhuan-dre Pretorius",
-        "Aman Rao Perala",
-      ],
-      startingRetainedCount: 10,
-      startingAdditionsCount: 1,
-    },
-    impactPlayerAlternatives: [
-      "Yash Raj Punja (wrist spin matchup)",
-      "Sandeep Sharma (seam defense)",
-    ],
-    actualVsHypothetical: {
-      retainedCount: 10,
-      hypotheticalAdditions: ["Nitish Rana"],
-    },
-  },
-  {
-    id: "tactical-scen-4",
-    name: "Powerplay Swing Conditions",
-    title: "Jaipur Swing Attack · Boult + Archer + Shami Squeeze",
-    purpose: "Exploit new-ball swing in Jaipur with Trent Boult alongside Archer and Shami.",
-    startingXI: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Dhruv Jurel",
-      "Riyan Parag",
-      "Nehal Wadhera",
-      "Donovan Ferreira",
-      "Ravindra Jadeja",
-      "Ravi Bishnoi",
-      "Jofra Archer",
-      "Trent Boult",
-      "Mohammed Shami",
-    ],
-    overseasCount: 3,
-    paceOptionsCount: 3,
-    spinOptionsCount: 3,
-    deathOversSpecialists: ["Jofra Archer", "Sandeep Sharma (Impact)"],
-    roleCoverageSummary: {
-      wicketkeepers: ["Dhruv Jurel", "Donovan Ferreira"],
-      topOrder: ["Vaibhav Sooryavanshi", "Yashasvi Jaiswal", "Riyan Parag"],
-      middleOrder: ["Dhruv Jurel", "Nehal Wadhera"],
-      finishers: ["Donovan Ferreira", "Ravindra Jadeja"],
-      spinners: ["Ravi Bishnoi", "Ravindra Jadeja", "Riyan Parag"],
-      seamers: ["Jofra Archer", "Trent Boult", "Mohammed Shami"],
-    },
-    benchDisplacement: {
-      displacedRetained: [
-        "Nandre Burger",
-        "Dasun Shanaka",
-        "Sandeep Sharma",
-        "Manimaran Siddharth",
-        "Yash Raj Punja",
-        "Shubham Dubey",
-        "Sushant Mishra",
-        "Brijesh Sharma",
-        "Lhuan-dre Pretorius",
-        "Aman Rao Perala",
-      ],
-      startingRetainedCount: 9,
-      startingAdditionsCount: 2,
-    },
-    impactPlayerAlternatives: [
-      "Sandeep Sharma (essential death bowling substitute)",
-      "Mahipal Lomror (batting depth)",
-    ],
-    actualVsHypothetical: {
-      retainedCount: 9,
-      hypotheticalAdditions: ["Nehal Wadhera", "Trent Boult"],
-    },
-  },
-  {
-    id: "tactical-scen-5",
-    name: "Specialist Death-Bowling Scenario",
-    title: "Lockdown Death Defense · Pathirana Gate Scenario",
-    purpose:
-      "Deploy Matheesha Pathirana (P1 Rank 2) alongside Jofra Archer for unassailable death-overs supremacy.",
-    startingXI: [
-      "Vaibhav Sooryavanshi",
-      "Yashasvi Jaiswal",
-      "Dhruv Jurel",
-      "Riyan Parag",
-      "Nehal Wadhera",
-      "Donovan Ferreira",
-      "Ravindra Jadeja",
-      "Ravi Bishnoi",
-      "Jofra Archer",
-      "Matheesha Pathirana",
-      "Mohammed Shami",
-    ],
-    overseasCount: 3,
-    paceOptionsCount: 3,
-    spinOptionsCount: 3,
-    deathOversSpecialists: ["Matheesha Pathirana", "Jofra Archer"],
-    roleCoverageSummary: {
-      wicketkeepers: ["Dhruv Jurel", "Donovan Ferreira"],
-      topOrder: ["Vaibhav Sooryavanshi", "Yashasvi Jaiswal", "Riyan Parag"],
-      middleOrder: ["Dhruv Jurel", "Nehal Wadhera"],
-      finishers: ["Donovan Ferreira", "Ravindra Jadeja"],
-      spinners: ["Ravi Bishnoi", "Ravindra Jadeja", "Riyan Parag"],
-      seamers: ["Jofra Archer", "Matheesha Pathirana", "Mohammed Shami"],
-    },
-    benchDisplacement: {
-      displacedRetained: [
-        "Nandre Burger",
-        "Dasun Shanaka",
-        "Sandeep Sharma",
-        "Manimaran Siddharth",
-        "Yash Raj Punja",
-        "Shubham Dubey",
-        "Sushant Mishra",
-        "Brijesh Sharma",
-        "Lhuan-dre Pretorius",
-        "Aman Rao Perala",
-      ],
-      startingRetainedCount: 9,
-      startingAdditionsCount: 2,
-    },
-    impactPlayerAlternatives: [
-      "Sandeep Sharma (Indian control backup)",
-      "Mustafizur Rahman (if Pathirana fails medical review)",
-    ],
-    actualVsHypothetical: {
-      retainedCount: 9,
-      hypotheticalAdditions: ["Nehal Wadhera", "Matheesha Pathirana"],
-    },
-  },
-];
-
-/**
- * ============================================================================
- * PART 9: AUCTION CAPACITY AND SLOT STRATEGY LADDER
- * ============================================================================
- */
-export const AUCTION_SLOT_STRATEGY = [
-  {
-    priority: 1,
-    targetArea: "Indian Middle-Order Hitter / Floater",
-    idealCandidate: "Nehal Wadhera",
-    fallbacks: ["Nitish Rana", "Mahipal Lomror"],
-    rationality:
-      "Core squad priority: fills the vacant No.5 position between Parag/Jurel and Ferreira. Protects against spin collapse.",
-    overseasOpportunityCost: "Zero (Indian slot preserves overseas quota for fast bowling).",
-  },
-  {
-    priority: 2,
-    targetArea: "Indian Wicketkeeper / Floating Cover",
-    idealCandidate: "Abishek Porel",
-    fallbacks: ["Robin Minz"],
-    rationality:
-      "Provides domestic backup for Dhruv Jurel, eliminating reliance on overseas backup keeper Lhuan-dre Pretorius.",
-    overseasOpportunityCost: "Zero (Saves an overseas squad and XI position).",
-  },
-  {
-    priority: 3,
-    targetArea: "Indian Pace Depth",
-    idealCandidate: "Avesh Khan",
-    fallbacks: ["Akash Madhwal", "Deepak Chahar"],
-    rationality:
-      "Provides proven high-speed enforcer capability (142+ kph) to prevent overworking Mohammed Shami.",
-    overseasOpportunityCost:
-      "Zero (Allows RR to field an extra overseas batter like Shanaka or Ferreira).",
-  },
-  {
-    priority: 4,
-    targetArea: "Overseas Death Specialist",
-    idealCandidate: "Matheesha Pathirana (Medical Gated)",
-    fallbacks: ["Mustafizur Rahman", "Gerald Coetzee"],
-    rationality:
-      "Solves the 2026 Qualifier 2 death-overs failure. Highest P1 pressure score in the auction pool (-12.38 runs/100).",
-    overseasOpportunityCost:
-      "Uses 1 overseas XI slot (Pairs with Archer and Ferreira; benches Burger or Shanaka).",
-  },
-  {
-    priority: 5,
-    targetArea: "Overseas Powerplay / Left-Arm Specialist",
-    idealCandidate: "Trent Boult",
-    fallbacks: ["Matt Henry", "Spencer Johnson"],
-    rationality:
-      "Jaipur home-pitch powerplay swing specialist (61.2% powerplay usage). Unlocks early wickets.",
-    overseasOpportunityCost:
-      "Uses 1 overseas XI slot; cannot be relied upon for death-overs overs 18–20.",
-  },
-  {
-    priority: 6,
-    targetArea: "Developmental All-Rounder / Domestic Value",
-    idealCandidate: "Mangesh Yadav / Vihaan Malhotra",
-    fallbacks: ["Aman Khan", "Onkar Tarmale"],
-    rationality:
-      "High-upside domestic talent acquired at base or low price for squad depth and long-term asset building.",
-    overseasOpportunityCost: "Zero.",
+    upgradeOverSquad:
+      "Adds an Indian fast-medium development option without using an overseas slot. He is a depth candidate for evaluation and does not displace an established retained bowler on the supplied evidence.",
+    watchOut:
+      "No established IPL playing record and a small domestic T20 sample. Do not describe him as a proven death bowler or pressure performer.",
+    tacticalRolesSupported: ["Indian pace depth", "Development option"],
+    isProvisional: true,
   },
 ];
