@@ -1,0 +1,380 @@
+{
+  "generatedAt": "2026-11-22T17:43:48.253Z",
+  "method": "Actual TypeScript domain engine executed through TypeScript transpilation; scoring was not reimplemented.",
+  "venueMappingChecks": [
+    {
+      "label": "Wankhede Stadium, Mumbai",
+      "expectedVenueId": 3,
+      "resolvedVenueId": 3,
+      "historicalMatches": 48,
+      "matched": true
+    },
+    {
+      "label": "M. A. Chidambaram Stadium (Chepauk), Chennai",
+      "expectedVenueId": 1,
+      "resolvedVenueId": 1,
+      "historicalMatches": 31,
+      "matched": true
+    },
+    {
+      "label": "Sawai Mansingh Stadium, Jaipur",
+      "expectedVenueId": 6,
+      "resolvedVenueId": 6,
+      "historicalMatches": 21,
+      "matched": true
+    },
+    {
+      "label": "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",
+      "expectedVenueId": 3272,
+      "resolvedVenueId": 3272,
+      "historicalMatches": 28,
+      "matched": true
+    },
+    {
+      "label": "Himachal Pradesh Cricket Association Stadium, Dharamshala",
+      "expectedVenueId": 48,
+      "resolvedVenueId": 48,
+      "historicalMatches": 10,
+      "matched": true
+    },
+    {
+      "label": "M. Chinnaswamy Stadium, Bengaluru",
+      "expectedVenueId": 2,
+      "resolvedVenueId": 2,
+      "historicalMatches": 23,
+      "matched": true
+    },
+    {
+      "label": "Arun Jaitley Stadium, Delhi",
+      "expectedVenueId": 7,
+      "resolvedVenueId": 7,
+      "historicalMatches": 26,
+      "matched": true
+    },
+    {
+      "label": "Eden Gardens, Kolkata",
+      "expectedVenueId": 8,
+      "resolvedVenueId": 8,
+      "historicalMatches": 30,
+      "matched": true
+    },
+    {
+      "label": "Rajiv Gandhi International Stadium, Hyderabad",
+      "expectedVenueId": 10,
+      "resolvedVenueId": 10,
+      "historicalMatches": 26,
+      "matched": true
+    },
+    {
+      "label": "Narendra Modi Stadium, Ahmedabad",
+      "expectedVenueId": 49,
+      "resolvedVenueId": 49,
+      "historicalMatches": 35,
+      "matched": true
+    },
+    {
+      "label": "Punjab Cricket Association IS Bindra Stadium, Mohali",
+      "expectedVenueId": 79,
+      "resolvedVenueId": 79,
+      "historicalMatches": 5,
+      "matched": true
+    },
+    {
+      "label": "Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur",
+      "expectedVenueId": 3692,
+      "resolvedVenueId": 3692,
+      "historicalMatches": 17,
+      "matched": true
+    },
+    {
+      "label": "Barsapara Cricket Stadium, Guwahati",
+      "expectedVenueId": 1241,
+      "resolvedVenueId": 1241,
+      "historicalMatches": 7,
+      "matched": true
+    },
+    {
+      "label": "ACA-VDCA Cricket Stadium, Visakhapatnam",
+      "expectedVenueId": 101,
+      "resolvedVenueId": 101,
+      "historicalMatches": 4,
+      "matched": true
+    }
+  ],
+  "matrix": {
+    "mappedVenues": 14,
+    "venueCasesIncludingUnknown": 15,
+    "surfaceSelections": 7,
+    "oppositionProfiles": 5,
+    "matchStates": 5,
+    "totalRuns": 2625,
+    "validRuns": 2625,
+    "invalidRuns": 0,
+    "emptyRecommendations": 0,
+    "distinctFirstChoicePlayers": [
+      "Abishek Porel",
+      "Akash Madhwal",
+      "Avesh Khan",
+      "Brijesh Sharma",
+      "Manimaran Siddharth",
+      "Mitch Owen",
+      "Nitish Rana",
+      "Sandeep Sharma"
+    ]
+  },
+  "controlledVariation": {
+    "venue": {
+      "comparedGroups": 50,
+      "firstChoiceChangedGroups": 0
+    },
+    "manualSurface": {
+      "comparedGroups": 375,
+      "firstChoiceChangedGroups": 195
+    },
+    "oppositionProfile": {
+      "comparedGroups": 525,
+      "firstChoiceChangedGroups": 195
+    }
+  },
+  "examples": [
+    {
+      "state": "first-innings-platform",
+      "recommendations": {
+        "Wankhede Stadium, Mumbai": "Nitish Rana",
+        "M. A. Chidambaram Stadium (Chepauk), Chennai": "Nitish Rana",
+        "Sawai Mansingh Stadium, Jaipur": "Nitish Rana"
+      }
+    },
+    {
+      "state": "chase-acceleration",
+      "recommendations": {
+        "Wankhede Stadium, Mumbai": "Mitch Owen",
+        "M. A. Chidambaram Stadium (Chepauk), Chennai": "Mitch Owen",
+        "Sawai Mansingh Stadium, Jaipur": "Mitch Owen"
+      }
+    },
+    {
+      "state": "chase-collapse",
+      "recommendations": {
+        "Wankhede Stadium, Mumbai": "Nitish Rana",
+        "M. A. Chidambaram Stadium (Chepauk), Chennai": "Nitish Rana",
+        "Sawai Mansingh Stadium, Jaipur": "Nitish Rana"
+      }
+    },
+    {
+      "state": "defend-early-partnership",
+      "recommendations": {
+        "Wankhede Stadium, Mumbai": "Manimaran Siddharth",
+        "M. A. Chidambaram Stadium (Chepauk), Chennai": "Manimaran Siddharth",
+        "Sawai Mansingh Stadium, Jaipur": "Manimaran Siddharth"
+      }
+    },
+    {
+      "state": "defend-death",
+      "recommendations": {
+        "Wankhede Stadium, Mumbai": "Akash Madhwal",
+        "M. A. Chidambaram Stadium (Chepauk), Chennai": "Akash Madhwal",
+        "Sawai Mansingh Stadium, Jaipur": "Akash Madhwal"
+      }
+    }
+  ],
+  "evidenceUseSummary": {
+    "topRecommendationWithPlayerVenueEvidence": 300,
+    "topRecommendationWithOpponentStyleEvidence": 675
+  },
+  "venueEvidenceExamples": [
+    {
+      "venue": "Wankhede Stadium, Mumbai",
+      "matchState": "first-innings-platform",
+      "player": "Nitish Rana",
+      "recommended": "Nitish Rana",
+      "sampleBalls": 546,
+      "matches": 40,
+      "groundSampleBalls": 75,
+      "groundSampleMatches": 5,
+      "groundEvidenceUsed": true,
+      "finalHistoricalMetricPer100": 8.032638374189988
+    },
+    {
+      "venue": "M. A. Chidambaram Stadium (Chepauk), Chennai",
+      "matchState": "first-innings-platform",
+      "player": "Nitish Rana",
+      "recommended": "Nitish Rana",
+      "sampleBalls": 546,
+      "matches": 40,
+      "groundSampleBalls": 29,
+      "groundSampleMatches": 1,
+      "groundEvidenceUsed": false,
+      "finalHistoricalMetricPer100": 8.274260627789904
+    },
+    {
+      "venue": "Sawai Mansingh Stadium, Jaipur",
+      "matchState": "first-innings-platform",
+      "player": "Nitish Rana",
+      "recommended": "Nitish Rana",
+      "sampleBalls": 546,
+      "matches": 40,
+      "groundSampleBalls": 26,
+      "groundSampleMatches": 3,
+      "groundEvidenceUsed": true,
+      "finalHistoricalMetricPer100": 6.936783453209585
+    },
+    {
+      "venue": "Wankhede Stadium, Mumbai",
+      "matchState": "defend-death",
+      "player": "Akash Madhwal",
+      "recommended": "Akash Madhwal",
+      "sampleBalls": 106,
+      "matches": 14,
+      "groundSampleBalls": 30,
+      "groundSampleMatches": 4,
+      "groundEvidenceUsed": true,
+      "finalHistoricalMetricPer100": 24.503616225915994
+    },
+    {
+      "venue": "M. A. Chidambaram Stadium (Chepauk), Chennai",
+      "matchState": "defend-death",
+      "player": "Akash Madhwal",
+      "recommended": "Akash Madhwal",
+      "sampleBalls": 106,
+      "matches": 14,
+      "groundSampleBalls": 9,
+      "groundSampleMatches": 2,
+      "groundEvidenceUsed": false,
+      "finalHistoricalMetricPer100": 24.445587355527476
+    },
+    {
+      "venue": "Sawai Mansingh Stadium, Jaipur",
+      "matchState": "defend-death",
+      "player": "Akash Madhwal",
+      "recommended": "Akash Madhwal",
+      "sampleBalls": 106,
+      "matches": 14,
+      "groundSampleBalls": 12,
+      "groundSampleMatches": 2,
+      "groundEvidenceUsed": false,
+      "finalHistoricalMetricPer100": 24.445587355527476
+    }
+  ],
+  "selectedSquad": {
+    "retainedPlayers": 19,
+    "selectedHypotheticalProfiles": [
+      "Mitch Owen",
+      "Matthew Breetzke",
+      "Nitish Rana",
+      "Abishek Porel",
+      "Avesh Khan",
+      "Akash Madhwal"
+    ],
+    "activeSquadSize": 25,
+    "startingXI": [
+      "Vaibhav Sooryavanshi",
+      "Yashasvi Jaiswal",
+      "Dhruv Jurel",
+      "Riyan Parag",
+      "Shubham Dubey",
+      "Donovan Ferreira",
+      "Dasun Shanaka",
+      "Ravindra Jadeja",
+      "Ravi Bishnoi",
+      "Jofra Archer",
+      "Mohammed Shami"
+    ]
+  },
+  "historicalModelSummary": {
+    "source_archive": "user-uploaded suprr_selector.zip",
+    "data_window": "IPL 2022–2026, usable match rows only",
+    "usable_ipl_matches": 362,
+    "ipl_venue_ids": 18,
+    "ipl_delivery_rows": 86668,
+    "ipl_legal_deliveries": 82781,
+    "venue_mapping_note": "The uploaded matches table contains numeric venue_id and venue_country but no ground-name dimension. Fourteen recurring IDs are mapped using observed home-team concentration with explicit confidence/basis; other IDs remain anonymous rather than guessed. Mappings are analyst-curated, not supplied official venue names.",
+    "model_targets": {
+      "batter": "striker batter runs on P0-defined legal deliveries",
+      "bowler": "batter runs scored against each bowler on legal deliveries; positive context_batter_runs_prevented is favourable, but this is not official bowler economy"
+    },
+    "production_model_features": [
+      "balls_left",
+      "cumw",
+      "cum",
+      "need",
+      "rrr",
+      "crr",
+      "ovr",
+      "bo",
+      "season",
+      "innings",
+      "phase",
+      "pace_or_spin",
+      "bowling_type",
+      "batting_type"
+    ],
+    "venue_feature_decision": "Venue ID is excluded from production expected-run residuals because the chronological 2026 holdout showed no out-of-sample benefit. Venue-specific observed splits are descriptive evidence with stronger shrinkage.",
+    "leakage_control": "Production expected-run residual models use only pre-delivery state, innings, phase, season and available pre-delivery bowling/batting descriptors. Venue ID is excluded from production residual prediction. Actual outcome, boundaries, dismissal and post-delivery labels are excluded from predictors.",
+    "validation": "Chronological holdout: IPL 2022–2025 training, IPL 2026 test. Player residuals are five-fold out-of-fold predictions with entire matches held out from each prediction fold; the folds are random by match, not rolling-origin.",
+    "batter_2026_venue_aware": {
+      "train_deliveries": 66477,
+      "test_deliveries": 16304,
+      "train_matches": 290,
+      "test_matches": 72,
+      "rmse": 1.8470555417831906,
+      "mae": 1.4475000748064615,
+      "baseline_rmse": 1.8650495703933612,
+      "baseline_mae": 1.4340753988296864,
+      "rmse_improvement_pct": 0.9648016275715056
+    },
+    "batter_2026_venue_blind": {
+      "train_deliveries": 66477,
+      "test_deliveries": 16304,
+      "train_matches": 290,
+      "test_matches": 72,
+      "rmse": 1.8449641462364186,
+      "mae": 1.449368160962842,
+      "baseline_rmse": 1.8650495703933612,
+      "baseline_mae": 1.4340753988296864,
+      "rmse_improvement_pct": 1.076937818478805
+    },
+    "bowler_2026_venue_aware": {
+      "train_deliveries": 66477,
+      "test_deliveries": 16304,
+      "train_matches": 290,
+      "test_matches": 72,
+      "rmse": 1.8470555417831906,
+      "mae": 1.4475000748064615,
+      "baseline_rmse": 1.8650495703933612,
+      "baseline_mae": 1.4340753988296864,
+      "rmse_improvement_pct": 0.9648016275715056
+    },
+    "bowler_2026_venue_blind": {
+      "train_deliveries": 66477,
+      "test_deliveries": 16304,
+      "train_matches": 290,
+      "test_matches": 72,
+      "rmse": 1.8449641462364186,
+      "mae": 1.449368160962842,
+      "baseline_rmse": 1.8650495703933612,
+      "baseline_mae": 1.4340753988296864,
+      "rmse_improvement_pct": 1.076937818478805
+    },
+    "limitations": [
+      "This is a context-adjusted descriptive player-skill layer, not a calibrated one-ball outcome distribution or match-win model.",
+      "The context model only modestly improves RMSE over a simple phase baseline and does not improve MAE; use player residuals as uncertain comparative evidence, not precise forecasts.",
+      "Venue ID did not improve chronological holdout performance; venue splits are descriptive player/ground samples with shrinkage and are not treated as a predictive pitch effect.",
+      "Bowling context evidence is based on batter runs scored on legal deliveries against each bowler, not official bowler economy or total bowler runs conceded. Wickets and boundary rates are shown separately. The approximate P0 extras reconstruction is excluded from these player comparisons.",
+      "Venue ID mapping is not complete because the uploaded archive has no venue lookup table; mapped names are analyst-curated joins from home-team concentration and retain explicit confidence/basis.",
+      "No pitch report, weather, dew, ball condition or exact substitution timing is present. Venue history is not a prepared-strip or weather forecast.",
+      "Data do not cover every player in the 2027 candidate board; those without an IPL match in the supplied period must remain no-estimate profiles.",
+      "The historical Impact Player in/out flags permit retrospective usage summaries, not state-specific substitute-choice training. The archive has no entry timestamp, score, wickets, innings phase or nominated substitutes at the moment of change."
+    ]
+  },
+  "historicalImpactUsageSummary": {
+    "matches_with_incoming_record": 291,
+    "incoming_records": 558,
+    "outgoing_records": 558,
+    "incoming_player_ids": 185,
+    "warning": "Flags identify the historical incoming/outgoing impact players, but this archive does not record the exact substitution over/score. Do not train a state-specific impact-choice classifier from these flags alone.",
+    "incoming_records_with_player_name": 558,
+    "incoming_named_unique_players": 185
+  },
+  "interpretation": "This matrix validates deterministic behaviour, sample-gated evidence wiring and structural constraints for one selected active squad package. It does not validate future-match prediction accuracy. The model's chronological holdout performance is modest and mixed; venue-only effects may not change the first choice when the role-fit gap is larger."
+}

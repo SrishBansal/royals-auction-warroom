@@ -11,7 +11,19 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "validate:release-reference": "node scripts/validate-release-reference.cjs",
+    "validate:alternatives": "node scripts/validate-recruitment-alternatives.cjs",
+    "validate:match-lab-retained": "node scripts/validate-match-lab-retained.cjs",
+    "validate:spatial": "node scripts/spatial/validate_spatial_pilot.cjs",
+    "validate:impact-matrix": "node scripts/validate-impact-player-matrix.cjs",
+    "validate:all": "bun run validate:candidate-pool-scope && bun run validate:routes && bun run validate:pressure-rankings && bun run validate:match-state-variation && bun run validate:release-reference && bun run validate:alternatives && bun run validate:match-lab-retained && bun run validate:impact-matrix && bun run validate:spatial && bun run validate:playoffs && bun run validate:pace-role-analysis",
+    "validate:playoffs": "node scripts/validate-playoff-evidence.cjs",
+    "validate:routes": "node scripts/validate-route-integration.cjs",
+    "validate:pressure-rankings": "node scripts/validate-pressure-rankings.cjs",
+    "validate:match-state-variation": "node scripts/validate-match-state-variation.cjs",
+    "validate:candidate-pool-scope": "node scripts/validate-candidate-pool-scope.cjs",
+    "validate:pace-role-analysis": "node scripts/validate-pace-role-analysis.cjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

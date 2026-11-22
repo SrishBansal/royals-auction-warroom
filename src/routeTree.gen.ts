@@ -10,10 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as BattersRouteImport } from './routes/batters'
-import { Route as BowlersRouteImport } from './routes/bowlers'
 import { Route as KnockoutsRouteImport } from './routes/knockouts'
-import { Route as MethodologyRouteImport } from './routes/methodology'
+import { Route as MatchLabRouteImport } from './routes/match-lab'
+import { Route as PressureRankingsRouteImport } from './routes/pressure-rankings'
+import { Route as SourcesRouteImport } from './routes/sources'
+import { Route as SpatialLabRouteImport } from './routes/spatial-lab'
 import { Route as SquadRouteImport } from './routes/squad'
 import { Route as TargetsRouteImport } from './routes/targets'
 
@@ -22,24 +23,29 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BattersRoute = BattersRouteImport.update({
-  id: '/batters',
-  path: '/batters',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BowlersRoute = BowlersRouteImport.update({
-  id: '/bowlers',
-  path: '/bowlers',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const KnockoutsRoute = KnockoutsRouteImport.update({
   id: '/knockouts',
   path: '/knockouts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MethodologyRoute = MethodologyRouteImport.update({
-  id: '/methodology',
-  path: '/methodology',
+const MatchLabRoute = MatchLabRouteImport.update({
+  id: '/match-lab',
+  path: '/match-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PressureRankingsRoute = PressureRankingsRouteImport.update({
+  id: '/pressure-rankings',
+  path: '/pressure-rankings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SourcesRoute = SourcesRouteImport.update({
+  id: '/sources',
+  path: '/sources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpatialLabRoute = SpatialLabRouteImport.update({
+  id: '/spatial-lab',
+  path: '/spatial-lab',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SquadRoute = SquadRouteImport.update({
@@ -55,29 +61,32 @@ const TargetsRoute = TargetsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/batters': typeof BattersRoute
-  '/bowlers': typeof BowlersRoute
   '/knockouts': typeof KnockoutsRoute
-  '/methodology': typeof MethodologyRoute
+  '/match-lab': typeof MatchLabRoute
+  '/pressure-rankings': typeof PressureRankingsRoute
+  '/sources': typeof SourcesRoute
+  '/spatial-lab': typeof SpatialLabRoute
   '/squad': typeof SquadRoute
   '/targets': typeof TargetsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/batters': typeof BattersRoute
-  '/bowlers': typeof BowlersRoute
   '/knockouts': typeof KnockoutsRoute
-  '/methodology': typeof MethodologyRoute
+  '/match-lab': typeof MatchLabRoute
+  '/pressure-rankings': typeof PressureRankingsRoute
+  '/sources': typeof SourcesRoute
+  '/spatial-lab': typeof SpatialLabRoute
   '/squad': typeof SquadRoute
   '/targets': typeof TargetsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/batters': typeof BattersRoute
-  '/bowlers': typeof BowlersRoute
   '/knockouts': typeof KnockoutsRoute
-  '/methodology': typeof MethodologyRoute
+  '/match-lab': typeof MatchLabRoute
+  '/pressure-rankings': typeof PressureRankingsRoute
+  '/sources': typeof SourcesRoute
+  '/spatial-lab': typeof SpatialLabRoute
   '/squad': typeof SquadRoute
   '/targets': typeof TargetsRoute
 }
@@ -85,38 +94,42 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/batters'
-    | '/bowlers'
     | '/knockouts'
-    | '/methodology'
+    | '/match-lab'
+    | '/pressure-rankings'
+    | '/sources'
+    | '/spatial-lab'
     | '/squad'
     | '/targets'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/batters'
-    | '/bowlers'
     | '/knockouts'
-    | '/methodology'
+    | '/match-lab'
+    | '/pressure-rankings'
+    | '/sources'
+    | '/spatial-lab'
     | '/squad'
     | '/targets'
   id:
     | '__root__'
     | '/'
-    | '/batters'
-    | '/bowlers'
     | '/knockouts'
-    | '/methodology'
+    | '/match-lab'
+    | '/pressure-rankings'
+    | '/sources'
+    | '/spatial-lab'
     | '/squad'
     | '/targets'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BattersRoute: typeof BattersRoute
-  BowlersRoute: typeof BowlersRoute
   KnockoutsRoute: typeof KnockoutsRoute
-  MethodologyRoute: typeof MethodologyRoute
+  MatchLabRoute: typeof MatchLabRoute
+  PressureRankingsRoute: typeof PressureRankingsRoute
+  SourcesRoute: typeof SourcesRoute
+  SpatialLabRoute: typeof SpatialLabRoute
   SquadRoute: typeof SquadRoute
   TargetsRoute: typeof TargetsRoute
 }
@@ -130,20 +143,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/batters': {
-      id: '/batters'
-      path: '/batters'
-      fullPath: '/batters'
-      preLoaderRoute: typeof BattersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/bowlers': {
-      id: '/bowlers'
-      path: '/bowlers'
-      fullPath: '/bowlers'
-      preLoaderRoute: typeof BowlersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/knockouts': {
       id: '/knockouts'
       path: '/knockouts'
@@ -151,11 +150,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KnockoutsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/methodology': {
-      id: '/methodology'
-      path: '/methodology'
-      fullPath: '/methodology'
-      preLoaderRoute: typeof MethodologyRouteImport
+    '/match-lab': {
+      id: '/match-lab'
+      path: '/match-lab'
+      fullPath: '/match-lab'
+      preLoaderRoute: typeof MatchLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pressure-rankings': {
+      id: '/pressure-rankings'
+      path: '/pressure-rankings'
+      fullPath: '/pressure-rankings'
+      preLoaderRoute: typeof PressureRankingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sources': {
+      id: '/sources'
+      path: '/sources'
+      fullPath: '/sources'
+      preLoaderRoute: typeof SourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spatial-lab': {
+      id: '/spatial-lab'
+      path: '/spatial-lab'
+      fullPath: '/spatial-lab'
+      preLoaderRoute: typeof SpatialLabRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/squad': {
@@ -177,10 +197,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BattersRoute: BattersRoute,
-  BowlersRoute: BowlersRoute,
   KnockoutsRoute: KnockoutsRoute,
-  MethodologyRoute: MethodologyRoute,
+  MatchLabRoute: MatchLabRoute,
+  PressureRankingsRoute: PressureRankingsRoute,
+  SourcesRoute: SourcesRoute,
+  SpatialLabRoute: SpatialLabRoute,
   SquadRoute: SquadRoute,
   TargetsRoute: TargetsRoute,
 }

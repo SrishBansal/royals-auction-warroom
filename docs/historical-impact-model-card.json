@@ -1,0 +1,69 @@
+{
+  "source_archive": "user-uploaded suprr_selector.zip",
+  "data_window": "IPL 2022–2026, usable match rows only",
+  "usable_ipl_matches": 362,
+  "ipl_venue_ids": 18,
+  "ipl_delivery_rows": 86668,
+  "ipl_legal_deliveries": 82781,
+  "venue_mapping_note": "The uploaded matches table contains numeric venue_id and venue_country but no ground-name dimension. Fourteen recurring IDs are mapped using observed home-team concentration with explicit confidence/basis; other IDs remain anonymous rather than guessed. Mappings are analyst-curated, not supplied official venue names.",
+  "model_targets": {
+    "batter": "striker batter runs on P0-defined legal deliveries",
+    "bowler": "batter runs scored against each bowler on legal deliveries; positive context_batter_runs_prevented is favourable, but this is not official bowler economy"
+  },
+  "production_model_features": [
+    "balls_left",
+    "cumw",
+    "cum",
+    "need",
+    "rrr",
+    "crr",
+    "ovr",
+    "bo",
+    "season",
+    "innings",
+    "phase",
+    "pace_or_spin",
+    "bowling_type",
+    "batting_type"
+  ],
+  "venue_feature_decision": "Venue ID is excluded from production expected-run residuals because the chronological 2026 holdout showed no out-of-sample benefit. Venue-specific observed splits are descriptive evidence with stronger shrinkage.",
+  "leakage_control": "Production expected-run residual models use only pre-delivery state, innings, phase, season and available pre-delivery bowling/batting descriptors. Venue ID is excluded from production residual prediction. Actual outcome, boundaries, dismissal and post-delivery labels are excluded from predictors.",
+  "validation": "Chronological holdout: IPL 2022–2025 training, IPL 2026 test. Player residuals are five-fold out-of-fold predictions with entire matches held out from each prediction fold; the folds are random by match, not rolling-origin.",
+  "limitations": [
+    "This is a context-adjusted descriptive player-skill layer, not a calibrated one-ball outcome distribution or match-win model.",
+    "The context model only modestly improves RMSE over a simple phase baseline and does not improve MAE; use player residuals as uncertain comparative evidence, not precise forecasts.",
+    "Venue ID did not improve chronological holdout performance; venue splits are descriptive player/ground samples with shrinkage and are not treated as a predictive pitch effect.",
+    "Bowling context evidence is based on batter runs scored on legal deliveries against each bowler, not official bowler economy or total bowler runs conceded. Wickets and boundary rates are shown separately. The approximate P0 extras reconstruction is excluded from these player comparisons.",
+    "Venue ID mapping is not complete because the uploaded archive has no venue lookup table; mapped names are analyst-curated joins from home-team concentration and retain explicit confidence/basis.",
+    "No pitch report, weather, dew, ball condition or exact substitution timing is present. Venue history is not a prepared-strip or weather forecast.",
+    "Data do not cover every player in the 2027 candidate board; those without an IPL match in the supplied period must remain no-estimate profiles.",
+    "The historical Impact Player in/out flags permit retrospective usage summaries, not state-specific substitute-choice training. The archive has no entry timestamp, score, wickets, innings phase or nominated substitutes at the moment of change."
+  ],
+  "context_model_2026_holdout": {
+    "target": "batter runs on legal deliveries",
+    "venue_aware": {
+      "train_deliveries": 66477,
+      "test_deliveries": 16304,
+      "train_matches": 290,
+      "test_matches": 72,
+      "rmse": 1.8470555417831906,
+      "mae": 1.4475000748064615,
+      "baseline_rmse": 1.8650495703933612,
+      "baseline_mae": 1.4340753988296864,
+      "rmse_improvement_pct": 0.9648016275715056
+    },
+    "venue_blind": {
+      "train_deliveries": 66477,
+      "test_deliveries": 16304,
+      "train_matches": 290,
+      "test_matches": 72,
+      "rmse": 1.8449641462364186,
+      "mae": 1.449368160962842,
+      "baseline_rmse": 1.8650495703933612,
+      "baseline_mae": 1.4340753988296864,
+      "rmse_improvement_pct": 1.076937818478805
+    },
+    "interpretation": "One shared batter-run context model. The same out-of-fold expected batter runs are used to compute batter context-added and bowler context-batter-runs-prevented residuals; this is not a separate official bowler-runs model."
+  },
+  "bowler_residual_definition": "For each bowler, context-batter-runs-prevented per 100 legal balls is sum(expected batter runs from the shared context model minus actual batter runs on legal balls) / legal balls × 100. This is not official bowler economy or total bowler runs conceded."
+}

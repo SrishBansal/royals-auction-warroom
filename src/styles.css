@@ -73,85 +73,87 @@
   --color-royal-pink: var(--royal-pink);
   --color-royal-gold: var(--royal-gold);
   --color-royal-blue: var(--royal-blue);
-  --font-display: "Barlow Condensed", sans-serif;
+  --font-display: "DM Serif Display", Georgia, serif;
   --font-sans: "DM Sans", sans-serif;
 }
 
-:root {
-  --radius: 0.4rem;
-  --background: oklch(0.16 0.035 264);
-  --foreground: oklch(0.94 0.018 82);
-  --card: oklch(0.205 0.035 264);
-  --card-foreground: oklch(0.94 0.018 82);
-  --popover: oklch(0.205 0.035 264);
-  --popover-foreground: oklch(0.94 0.018 82);
-  --primary: oklch(0.68 0.23 355);
+ :root {
+  color-scheme: dark;
+  --radius: 0.85rem;
+  --background: oklch(0.155 0.035 263);
+  --foreground: oklch(0.93 0.014 255);
+  --card: oklch(0.205 0.035 263);
+  --card-foreground: oklch(0.93 0.014 255);
+  --popover: oklch(0.205 0.035 263);
+  --popover-foreground: oklch(0.93 0.014 255);
+  --primary: oklch(0.69 0.22 350);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.26 0.04 260);
-  --secondary-foreground: oklch(0.94 0.018 82);
-  --muted: oklch(0.24 0.03 260);
-  --muted-foreground: oklch(0.72 0.025 265);
-  --accent: oklch(0.29 0.045 260);
-  --accent-foreground: oklch(0.96 0.012 82);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.36 0.034 260);
-  --input: oklch(0.33 0.035 260);
-  --ring: oklch(0.68 0.23 355);
-  --royal-pink: oklch(0.68 0.23 355);
-  --royal-gold: oklch(0.77 0.12 82);
-  --royal-blue: oklch(0.34 0.08 260);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.18 0.035 264);
-  --sidebar-foreground: oklch(0.94 0.018 82);
-  --sidebar-primary: oklch(0.68 0.23 355);
+  --secondary: oklch(0.255 0.038 263);
+  --secondary-foreground: oklch(0.9 0.015 255);
+  --muted: oklch(0.245 0.034 263);
+  --muted-foreground: oklch(0.72 0.025 255);
+  --accent: oklch(0.29 0.05 263);
+  --accent-foreground: oklch(0.94 0.012 255);
+  --destructive: oklch(0.68 0.19 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.32 0.035 263);
+  --input: oklch(0.34 0.04 263);
+  --ring: oklch(0.69 0.22 350);
+  --royal-pink: oklch(0.69 0.22 350);
+  --royal-gold: oklch(0.78 0.14 82);
+  --royal-blue: oklch(0.31 0.065 263);
+  --chart-1: oklch(0.69 0.22 350);
+  --chart-2: oklch(0.55 0.10 255);
+  --chart-3: oklch(0.78 0.14 82);
+  --chart-4: oklch(0.7 0.13 160);
+  --chart-5: oklch(0.72 0.16 35);
+  --sidebar: oklch(0.175 0.035 263);
+  --sidebar-foreground: oklch(0.93 0.014 255);
+  --sidebar-primary: oklch(0.69 0.22 350);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.26 0.04 260);
-  --sidebar-accent-foreground: oklch(0.94 0.018 82);
-  --sidebar-border: oklch(0.36 0.034 260);
-  --sidebar-ring: oklch(0.68 0.23 355);
+  --sidebar-accent: oklch(0.27 0.04 263);
+  --sidebar-accent-foreground: oklch(0.93 0.014 255);
+  --sidebar-border: oklch(0.32 0.035 263);
+  --sidebar-ring: oklch(0.69 0.22 350);
 }
 
 .dark {
-  --background: oklch(0.16 0.035 264);
-  --foreground: oklch(0.94 0.018 82);
-  --card: oklch(0.205 0.035 264);
-  --card-foreground: oklch(0.94 0.018 82);
-  --popover: oklch(0.205 0.035 264);
-  --popover-foreground: oklch(0.94 0.018 82);
-  --primary: oklch(0.68 0.23 355);
+  color-scheme: dark;
+  --background: oklch(0.155 0.035 263);
+  --foreground: oklch(0.93 0.014 255);
+  --card: oklch(0.205 0.035 263);
+  --card-foreground: oklch(0.93 0.014 255);
+  --popover: oklch(0.205 0.035 263);
+  --popover-foreground: oklch(0.93 0.014 255);
+  --primary: oklch(0.69 0.22 350);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.26 0.04 260);
-  --secondary-foreground: oklch(0.94 0.018 82);
-  --muted: oklch(0.24 0.03 260);
-  --muted-foreground: oklch(0.72 0.025 265);
-  --accent: oklch(0.29 0.045 260);
-  --accent-foreground: oklch(0.96 0.012 82);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.36 0.034 260);
-  --input: oklch(0.33 0.035 260);
-  --ring: oklch(0.68 0.23 355);
-  --royal-pink: oklch(0.68 0.23 355);
-  --royal-gold: oklch(0.77 0.12 82);
-  --royal-blue: oklch(0.34 0.08 260);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.18 0.035 264);
-  --sidebar-foreground: oklch(0.94 0.018 82);
-  --sidebar-primary: oklch(0.68 0.23 355);
+  --secondary: oklch(0.255 0.038 263);
+  --secondary-foreground: oklch(0.9 0.015 255);
+  --muted: oklch(0.245 0.034 263);
+  --muted-foreground: oklch(0.72 0.025 255);
+  --accent: oklch(0.29 0.05 263);
+  --accent-foreground: oklch(0.94 0.012 255);
+  --destructive: oklch(0.68 0.19 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.32 0.035 263);
+  --input: oklch(0.34 0.04 263);
+  --ring: oklch(0.69 0.22 350);
+  --royal-pink: oklch(0.69 0.22 350);
+  --royal-gold: oklch(0.78 0.14 82);
+  --royal-blue: oklch(0.31 0.065 263);
+  --chart-1: oklch(0.69 0.22 350);
+  --chart-2: oklch(0.55 0.10 255);
+  --chart-3: oklch(0.78 0.14 82);
+  --chart-4: oklch(0.7 0.13 160);
+  --chart-5: oklch(0.72 0.16 35);
+  --sidebar: oklch(0.175 0.035 263);
+  --sidebar-foreground: oklch(0.93 0.014 255);
+  --sidebar-primary: oklch(0.69 0.22 350);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.26 0.04 260);
-  --sidebar-accent-foreground: oklch(0.94 0.018 82);
-  --sidebar-border: oklch(0.36 0.034 260);
-  --sidebar-ring: oklch(0.68 0.23 355);
+  --sidebar-accent: oklch(0.27 0.04 263);
+  --sidebar-accent-foreground: oklch(0.93 0.014 255);
+  --sidebar-border: oklch(0.32 0.035 263);
+  --sidebar-ring: oklch(0.69 0.22 350);
 }
 
 @layer base {
@@ -159,17 +161,23 @@
     border-color: var(--color-border);
   }
 
+  html { background: var(--color-background); }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
+  ::selection { background: color-mix(in oklab, var(--color-royal-pink) 42%, transparent); color: white; }
 }
 
 .war-room {
   min-height: 100vh;
   overflow-x: clip;
-  background: var(--color-background);
+  background:
+    radial-gradient(ellipse at 12% -5%, color-mix(in oklab, var(--color-royal-blue) 26%, transparent), transparent 36rem),
+    var(--color-background);
 }
 .control {
   width: 100%;
@@ -179,6 +187,7 @@
   background-color: var(--color-card);
   padding: 0.5rem 0.75rem;
   color: var(--color-foreground);
+  color-scheme: dark;
   font: inherit;
   font-size: 0.8125rem;
 }
@@ -192,7 +201,9 @@
 }
 .display-face {
   font-family: var(--font-display);
-  text-transform: uppercase;
+  font-weight: 400;
+  letter-spacing: -0.018em;
+  text-transform: none;
 }
 .section-rule {
   height: 1px;
@@ -246,8 +257,8 @@
 }
 .pitch-surface {
   background:
-    repeating-linear-gradient(0deg, oklch(0.25 0.07 150 / 0.25) 0 1px, transparent 1px 44px),
-    radial-gradient(ellipse at center, oklch(0.34 0.08 150 / 0.36), oklch(0.19 0.04 260) 74%);
+    linear-gradient(180deg, oklch(0.965 0.023 145 / 0.7), oklch(0.975 0.012 84) 68%);
+  border-radius: 1.2rem;
 }
 .roster-slot {
   border: 1px dashed color-mix(in oklab, var(--color-royal-pink) 70%, transparent);
@@ -257,9 +268,10 @@
   border: 1px solid var(--color-border);
   background: linear-gradient(
     145deg,
-    color-mix(in oklab, var(--color-card) 95%, var(--color-royal-blue)),
+    color-mix(in oklab, var(--color-card) 92%, var(--color-royal-blue)),
     var(--color-card)
   );
+  box-shadow: 0 18px 50px oklch(0.06 0.025 263 / 0.16);
 }
 .rank-line {
   height: 5px;
@@ -361,4 +373,121 @@
   header nav {
     justify-content: flex-start;
   }
+}
+
+/* Royals War Room refinement: restrained curves, clearer surfaces and phase graphics. */
+.rr-hero-panel {
+  border-radius: 2.6rem 2.6rem 4.8rem 2.6rem;
+  background:
+    radial-gradient(circle at 88% 12%, color-mix(in oklab, var(--color-royal-pink) 22%, transparent), transparent 34%),
+    linear-gradient(135deg, color-mix(in oklab, var(--color-royal-blue) 65%, var(--color-background)), var(--color-background));
+  box-shadow: 0 24px 80px oklch(0.06 0.025 260 / 0.28);
+}
+.rr-hero-panel .hero-shade {
+  background:
+    linear-gradient(90deg, oklch(0.11 0.035 264 / 0.92) 0%, oklch(0.11 0.035 264 / 0.72) 48%, oklch(0.11 0.035 264 / 0.2) 100%),
+    linear-gradient(0deg, oklch(0.11 0.035 264 / 0.9), transparent 62%),
+    linear-gradient(135deg, oklch(0.66 0.22 355 / 0.12), transparent 54%);
+}
+.rr-crest {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-royal-gold) 16%, transparent), 0 8px 28px oklch(0.04 0.02 260 / 0.28);
+}
+.hero-stat {
+  border-radius: 1.1rem 1.1rem 1.7rem 1.1rem;
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.08);
+}
+.brief-card,
+.workspace-link,
+.recruitment-card,
+.workflow-step {
+  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+.brief-card:hover,
+.workspace-link:hover,
+.recruitment-card:hover {
+  border-color: color-mix(in oklab, var(--color-royal-gold) 54%, var(--color-border));
+  box-shadow: 0 14px 34px oklch(0.05 0.025 260 / 0.2);
+}
+.recruitment-card {
+  border-radius: 1.25rem 1.25rem 2rem 1.25rem;
+  background: var(--color-card);
+}
+.workflow-step {
+  min-height: 7rem;
+}
+.workflow-connector {
+  position: absolute;
+  right: 50%;
+  bottom: -.6rem;
+  z-index: 2;
+  display: grid;
+  width: 1.2rem;
+  height: 1.2rem;
+  place-items: center;
+  transform: translateX(50%);
+  border: 1px solid color-mix(in oklab, var(--color-royal-gold) 45%, var(--color-border));
+  border-radius: 999px;
+  background: var(--color-background);
+  color: var(--color-royal-gold);
+  font-size: .72rem;
+}
+.phase-bar {
+  background: linear-gradient(90deg, var(--color-royal-pink), var(--color-royal-gold));
+  box-shadow: 0 0 16px color-mix(in oklab, var(--color-royal-pink) 18%, transparent);
+}
+.player-tile {
+  background: var(--color-card);
+}
+.player-tile-overseas {
+  border-top: 2px solid color-mix(in oklab, var(--color-royal-pink) 72%, transparent);
+}
+.player-tile-indian {
+  border-top: 2px solid color-mix(in oklab, var(--color-royal-gold) 62%, transparent);
+}
+.pitch-surface {
+  border-radius: 1.25rem 1.25rem 2rem 1.25rem;
+}
+.data-card {
+  border-radius: 1rem 1rem 1.6rem 1rem;
+}
+@media (max-width: 640px) {
+  .rr-hero-panel { border-radius: 1.6rem 1.6rem 2.6rem 1.6rem; }
+}
+
+
+.rr-official-logo { background: linear-gradient(135deg, #e5007e, #4a168e); }
+.rr-official-logo img { display: block; }
+.story-brief { background: linear-gradient(180deg, oklch(0.955 0.018 84), oklch(0.975 0.012 84)); }
+.story-panel { box-shadow: 0 18px 50px oklch(0.3 0.025 264 / 0.055); }
+.story-stage { min-height: 100%; box-shadow: 0 8px 28px oklch(0.3 0.025 264 / 0.035); }
+.story-stage:first-child { border-top: 3px solid var(--color-royal-pink); }
+.story-stage:last-child { border-top: 3px solid var(--color-royal-gold); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* Premium war-room finish: restrained depth, crisp inputs and the Emergent-inspired navy/gold language. */
+.rr-hero-panel {
+  box-shadow: 0 28px 80px oklch(0.05 0.025 263 / 0.34);
+  border-radius: 2.35rem 2.35rem 1.25rem 2.35rem;
+}
+.war-room article {
+  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+.war-room article:hover {
+  border-color: color-mix(in oklab, var(--color-royal-gold) 26%, var(--color-border));
+}
+.war-room nav a[aria-current="page"] {
+  color: var(--color-royal-gold);
+  border-color: var(--color-royal-gold);
+}
+.war-room button, .war-room a { -webkit-tap-highlight-color: transparent; }
+.war-room a:focus-visible, .war-room button:focus-visible, .war-room select:focus-visible, .war-room input:focus-visible {
+  outline: 2px solid var(--color-royal-gold);
+  outline-offset: 3px;
+}
+.war-room select option { background: oklch(0.205 0.035 263); color: oklch(0.93 0.014 255); }
+.section-rule { opacity: 0.8; }
+@media (prefers-reduced-motion: reduce) {
+  .war-room article, .war-room a, .war-room button { transition: none !important; }
 }

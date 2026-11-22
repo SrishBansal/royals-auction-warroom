@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "releasedProfiles": 19,
+  "researchProfiles": 20,
+  "pathiranaMedicalGate": "PASS",
+  "XIAndImpactUI": "PASS — tube lineup and no free-form outgoing-player dropdown",
+  "situationMatrix": {
+    "scenarios": 2625,
+    "completeCombinations": 7875
+  },
+  "uiBudgetControls": "PASS — planned bids retained; unsupported ceiling/value-per-crore controls absent",
+  "packageCases": [
+    {
+      "label": "no-buy baseline",
+      "admitted": 0,
+      "squadSize": 19,
+      "overseasSquad": 5,
+      "overseasXI": 3,
+      "assignments": 100,
+      "validXI": true
+    },
+    {
+      "label": "single-target",
+      "admitted": 1,
+      "squadSize": 20,
+      "overseasSquad": 5,
+      "overseasXI": 3,
+      "assignments": 121,
+      "validXI": true
+    },
+    {
+      "label": "two-player package",
+      "admitted": 2,
+      "squadSize": 21,
+      "overseasSquad": 5,
+      "overseasXI": 3,
+      "assignments": 144,
+      "validXI": true
+    },
+    {
+      "label": "six-player package",
+      "admitted": 6,
+      "squadSize": 25,
+      "overseasSquad": 5,
+      "overseasXI": 3,
+      "assignments": 356,
+      "validXI": true
+    }
+  ],
+  "note": "Domain package and tactical-combination tests only; React/browser interaction, current medical clearance and auction registration are not certified by this script."
+}

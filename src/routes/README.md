@@ -1,21 +1,16 @@
-# Routes
+# Application routes
 
-TanStack Start uses **file-based routing**. Every `.tsx` file in this directory
-defines a route. Do **not** create `src/pages/`, `src/routes/_app/index.tsx`, or
-`app/layout.tsx` — those are Next.js / Remix conventions. The only root layout
-is `src/routes/__root.tsx`.
+The application has seven active TanStack file routes:
 
-## Conventions
+| File | URL | Purpose |
+| --- | --- | --- |
+| `index.tsx` | `/` | Executive War Room, five-season comparison, playoff evidence and squad-gap narrative |
+| `squad.tsx` | `/squad` | Retained squad, XI permutations and absence-cover checks |
+| `targets.tsx` | `/targets` | Role-first recruitment decisions and evidence |
+| `match-lab.tsx` | `/match-lab` | First-innings, chase and defence situation analysis |
+| `knockouts.tsx` | `/knockouts` | Seven playoff records and supplied phase diagnostics |
+| `spatial-lab.tsx` | `/spatial-lab` | Separate experimental Kadamba 25-zone map and expected-outcome pilot |
+| `pressure-rankings.tsx` | `/pressure-rankings` | IPL-only experimental pressure Top 10s; separate from RR recruitment |
+| `__root.tsx` | app shell | Shared navigation, metadata and layout |
 
-| File | URL |
-| --- | --- |
-| `index.tsx` | `/` |
-| `about.tsx` | `/about` |
-| `users/index.tsx` | `/users` |
-| `users/$id.tsx` | `/users/:id` (dynamic — bare `$`, no curly braces) |
-| `posts/{-$category}.tsx` | `/posts/:category?` (optional segment) |
-| `files/$.tsx` | `/files/*` (splat — read via `_splat` param, never `*`) |
-| `_layout.tsx` | layout route (renders children via `<Outlet />`) |
-| `__root.tsx` | app shell — wraps every page; preserve `<Outlet />` |
-
-`routeTree.gen.ts` is auto-generated. Don't edit it by hand.
+The spatial lab is deliberately isolated. It does not feed the recruitment board, pressure rankings, squad-selection engine or Match-State recommendations. `routeTree.gen.ts` is the TanStack generated route map and must include all seven routes.
